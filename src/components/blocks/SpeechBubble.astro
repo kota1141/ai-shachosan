@@ -1,0 +1,12 @@
+---
+const value = Astro.props.node ?? Astro.props;
+const question = value.speaker === 'question';
+const speaker = question ? '質問する店長' : '解説する薬剤師';
+---
+<aside class:list={['speech', {'speech--answer': !question}]} aria-label={`${speaker}のせりふ`}>
+  <div class="speech__avatar" aria-hidden="true">{question ? '？' : '！'}</div>
+  <div class="speech__body"><p class="speech__label">{speaker} <small>架空の案内役</small></p><p>{String(value.text ?? '')}</p></div>
+</aside>
+<style>
+.speech{display:flex;gap:1rem;margin:1.75rem 0;align-items:flex-start}.speech--answer{margin-left:1rem}.speech__avatar{flex:0 0 2.75rem;height:2.75rem;display:grid;place-items:center;border:1px solid var(--color-border);border-radius:50%;font-weight:700}.speech__body{padding:1rem 1.25rem;border:1px solid var(--color-border);border-radius:0 1rem 1rem 1rem;flex:1;background:var(--color-surface)}.speech__body p{margin:0;white-space:pre-line;line-height:1.9}.speech__body .speech__label{font-size:.8rem;font-weight:700;margin-bottom:.45rem}.speech__label small{font-size:.7rem;font-weight:400;color:var(--color-muted);margin-left:.4rem}@media(max-width:600px){.speech{gap:.6rem}.speech__body{padding:.9rem}.speech--answer{margin-left:0}}
+</style>

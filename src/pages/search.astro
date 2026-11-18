@@ -58,7 +58,7 @@ const countLabel = nextCursor
 >
 	<header class="band intro">
 		<div class="frame">
-			<p class="eyebrow">Search</p>
+			<p class="eyebrow">検索</p>
 			<h1 class="intro__title">What are you looking for?</h1>
 			<form
 				method="get"
@@ -67,7 +67,7 @@ const countLabel = nextCursor
 				aria-label="Posts"
 				class="search-form"
 			>
-				<label for="search-query" class="sr-only">Search posts</label>
+				<label for="search-query" class="sr-only">記事を検索</label>
 				<div class="search-field">
 					<svg
 						class="search-field__icon"
@@ -87,17 +87,17 @@ const countLabel = nextCursor
 						type="search"
 						name="q"
 						value={query}
-						placeholder="Search posts"
+						placeholder="記事を検索"
 						autofocus={!query}
 					/>
-					<button type="submit" class="btn search-field__submit">Search</button>
+					<button type="submit" class="btn search-field__submit">検索</button>
 				</div>
 			</form>
 			{
 				!query && (
 					<p class="search-hint">
 						Searches post titles and full text. Not sure where to start?{" "}
-						<a href="/posts">Browse all posts</a>.
+						<a href="/posts">記事一覧を見る</a>.
 					</p>
 				)
 			}
@@ -120,7 +120,7 @@ const countLabel = nextCursor
 									<strong>{countLabel}</strong> for “{query}”
 								</p>
 								<a href="/posts" class="arrow-link">
-									All posts
+									記事一覧
 									<svg
 										viewBox="0 0 24 24"
 										fill="none"
@@ -181,7 +181,7 @@ const countLabel = nextCursor
 							</p>
 							<div class="empty-state__actions">
 								<a href="/posts" class="btn btn--ghost">
-									Browse all posts
+									記事一覧を見る
 								</a>
 							</div>
 						</div>

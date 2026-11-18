@@ -4,6 +4,7 @@ import { d1, r2 } from "@emdash-cms/cloudflare";
 import { defineConfig, fontProviders } from "astro/config";
 import emdash from "emdash/astro";
 import { Features } from "lightningcss";
+import { fileURLToPath } from "node:url";
 
 export default defineConfig({
 	output: "server",
@@ -28,6 +29,15 @@ export default defineConfig({
 		emdash({
 			database: d1({ binding: "DB", session: "auto", coalesce: true }),
 			storage: r2({ binding: "MEDIA" }),
+			plugins: [
+				{
+					id: "pharmacy-meo-blocks",
+					version: "1.0.0",
+					format: "native",
+					entrypoint: fileURLToPath(new URL("./src/plugins/meo-blocks/index.ts", import.meta.url)),
+					componentsEntry: fileURLToPath(new URL("./src/plugins/meo-blocks/components.ts", import.meta.url)),
+				},
+			],
 		}),
 	],
 	fonts: [

@@ -14,7 +14,7 @@ const POSTS_PER_PAGE = 7;
 
 const [{ entries: posts, cacheHint }, settings] = await Promise.all([
 	getEmDashCollection("posts", {
-		orderBy: { published_at: "desc" },
+		orderBy: { learning_order: "asc" },
 		limit: POSTS_PER_PAGE + 1, // +1 to detect "view all" need
 	}),
 	getSiteSettings(),
@@ -65,8 +65,8 @@ const gridPostsWithTags = gridPosts.map((post) => ({
 	<header class="band intro">
 		<div class="frame home-intro">
 			<div>
-				<p class="eyebrow">Blog</p>
-				<h1 class="intro__title">{siteTitle}</h1>
+				<p class="eyebrow">地域の薬局のためのGoogleマップ入門</p>
+				<h1 class="intro__title">その薬局のよさ、<br />近くの人に届いていますか？</h1>
 				{siteTagline && <p class="intro__subtitle">{siteTagline}</p>}
 			</div>
 			<a
@@ -87,23 +87,24 @@ const gridPostsWithTags = gridPosts.map((post) => ({
 					<path d="M4 4a16 16 0 0 1 16 16"></path>
 					<circle cx="5" cy="19" r="1"></circle>
 				</svg>
-				RSS feed
+				更新情報
 			</a>
 		</div>
 	</header>
+  <section class="band section"><div class="frame"><h2>地図から、新しい相談が始まることも。</h2><p>相談できること、駐車場の場所、初めての人への案内。Googleマップに載せる情報を見直すと、薬局のよさが伝わるきっかけになります。「MEOって何？」という方も、ここから始められます。</p><p><a class="btn" href="/posts/lessons-from-other-industries">ほかの業界の事例を読む</a> <a class="btn btn--ghost" href="/posts/regional-opportunity">地方の薬局の可能性を知る</a></p><p><a href="/posts/before-you-start">Googleマップの設定をしたことがない方へ</a> · <a href="/services">初期整備・保守の内容を見る</a></p><p>このサイトは編集部初稿の構成確認用です。事例は支援会社の公表資料で、表示・クリックと実際の来店や売上を分けて説明します。</p></div></section>
 
 	{
 		posts.length === 0 ? (
 			<section class="band section">
 				<div class="frame">
 					<div class="empty-state">
-						<h2 class="empty-state__title">No posts yet</h2>
+						<h2 class="empty-state__title">記事は下書きで準備されています</h2>
 						<p class="empty-state__text">
-							Create your first post in the admin panel.
+							管理画面から初期記事を確認できます。公開前に内容・出典を確認してください。
 						</p>
 						<div class="empty-state__actions">
 							<a href="/_emdash/admin/content/posts/new" class="btn">
-								Create a post
+								管理画面を開く
 							</a>
 						</div>
 					</div>
@@ -130,11 +131,11 @@ const gridPostsWithTags = gridPosts.map((post) => ({
 						<div class="frame">
 							<div class="section-head">
 								<h2 id="latest-posts" class="section-head__title">
-									Latest posts
+									まず読んでほしい記事
 								</h2>
 								{hasMorePosts && (
 									<a href="/posts" class="arrow-link">
-										View all<span class="sr-only"> posts</span>
+										すべて読む<span class="sr-only"> posts</span>
 										<svg
 											viewBox="0 0 24 24"
 											fill="none"

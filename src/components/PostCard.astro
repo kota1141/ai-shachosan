@@ -40,9 +40,11 @@ const sizes = {
 ---
 
 <article class:list={["post", `post--${variant}`]}>
-	<a href={href} class="post__media" tabindex="-1" aria-hidden="true">
-		{
-			post.data.featured_image ? (
+	{
+		/* No placeholder box when an article has no featured image: the 13 articles
+		   have none yet, and empty grey boxes read as broken images. */
+		post.data.featured_image && (
+			<a href={href} class="post__media" tabindex="-1" aria-hidden="true">
 				<div class="post__image" {...post.edit.featured_image}>
 					<Image
 						image={post.data.featured_image}
@@ -50,11 +52,9 @@ const sizes = {
 						priority={priority}
 					/>
 				</div>
-			) : (
-				<div class="post__placeholder" />
-			)
-		}
-	</a>
+			</a>
+		)
+	}
 	<div class="post__body">
 		<a href={href} class="post__link" aria-labelledby={titleId}>
 			<span class="post__meta">
@@ -445,5 +445,10 @@ const sizes = {
 			grid-template-columns: minmax(0, 1fr) 4.5rem;
 			gap: var(--spacing-3);
 		}
+	}
+
+	/* Rows without a featured image use the full width for text. */
+	.post--row:not(:has(.post__media)) {
+		grid-template-columns: minmax(0, 1fr);
 	}
 </style>

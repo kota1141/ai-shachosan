@@ -6,6 +6,7 @@ import {
 } from "emdash";
 import Base from "../layouts/Base.astro";
 import PostCard from "../components/PostCard.astro";
+import SpeechBubble from "../components/blocks/SpeechBubble.astro";
 import { resolveBlogSiteIdentity } from "../utils/site-identity";
 
 // Limit to what we render (1 featured + 6 grid). The DB does the slicing
@@ -65,9 +66,9 @@ const gridPostsWithTags = gridPosts.map((post) => ({
 	<header class="band intro">
 		<div class="frame home-intro">
 			<div>
-				<p class="eyebrow">地域の薬局のためのGoogleマップ入門</p>
-				<h1 class="intro__title">その薬局のよさ、<br />近くの人に届いていますか？</h1>
-				{siteTagline && <p class="intro__subtitle">{siteTagline}</p>}
+				<p class="eyebrow">薬局の経営者・担当者のためのMEO入門</p>
+				<h1 class="intro__title">薬局のMEOを、<br />やさしく学ぶ。</h1>
+				{siteTagline && <p class="intro__lead">{siteTagline}</p>}
 			</div>
 			<a
 				href="/rss.xml"
@@ -91,7 +92,14 @@ const gridPostsWithTags = gridPosts.map((post) => ({
 			</a>
 		</div>
 	</header>
-  <section class="band section"><div class="frame"><h2>地図から、新しい相談が始まることも。</h2><p>相談できること、駐車場の場所、初めての人への案内。Googleマップに載せる情報を見直すと、薬局のよさが伝わるきっかけになります。「MEOって何？」という方も、ここから始められます。</p><p><a class="btn" href="/posts/lessons-from-other-industries">ほかの業界の事例を読む</a> <a class="btn btn--ghost" href="/posts/regional-opportunity">地方の薬局の可能性を知る</a></p><p><a href="/posts/before-you-start">Googleマップの設定をしたことがない方へ</a> · <a href="/services">初期整備・保守の内容を見る</a></p><p>このサイトは編集部初稿の構成確認用です。事例は支援会社の公表資料で、表示・クリックと実際の来店や売上を分けて説明します。</p></div></section>
+  <section class="band section" aria-label="ふたりと一緒に学ぶ">
+    <div class="frame home-characters">
+      <SpeechBubble speaker="question" expression="question" text="MEOが大事とは聞くけど、うちの薬局では何から始めればいい？" />
+      <SpeechBubble speaker="answer" expression="explain" text="まずは、初めて来る方が何を知りたいか。一緒に、自分の薬局でできることを見つけましょう。" />
+      <p class="home-characters__link"><a href="/characters/">薬局長と青葉まことをご紹介します<span aria-hidden="true"> →</span></a></p>
+    </div>
+  </section>
+  <section class="band section"><div class="frame"><h2>「MEOって何？」から、自分の薬局でできることまで。</h2><p>MEOという言葉は聞いたけれど、何をするのかはまだ分からない。仕組み、期待できる変化、具体的な作業を、会話と事例で学べます。</p><p><a class="btn" href="/posts/what-is-meo">MEOの基本から読む</a> <a class="btn btn--ghost" href="/posts">学べるテーマを見る</a></p><p><a href="/posts/lessons-from-other-industries">ほかの業界の事例を読む</a> · <a href="/posts/regional-opportunity">地方の薬局の可能性を知る</a> · <a href="/services">初期整備・保守の内容を見る</a></p><p>このサイトは編集部初稿の構成確認用です。事例は支援会社の公表資料で、表示・クリックと実際の来店や売上を分けて説明します。</p></div></section>
 
 	{
 		posts.length === 0 ? (
@@ -170,6 +178,10 @@ const gridPostsWithTags = gridPosts.map((post) => ({
 </Base>
 
 <style>
+	.home-characters { max-width: min(100%, 48rem); margin-inline: auto; }
+	.home-characters__link { font-size: .9rem; text-align: right; line-height: 1.8; }
+	.home-characters__link a { text-underline-offset: .2em; }
+
 	.home-intro {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) auto;

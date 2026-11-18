@@ -26,7 +26,7 @@ const {
 	nextCursor,
 } = await getEmDashCollection("posts", {
 	where: { category: term.slug },
-	orderBy: { published_at: "desc" },
+	orderBy: { learning_order: "asc" },
 	limit: 20,
 	cursor,
 });

@@ -1,0 +1,136 @@
+---
+import Base from "../layouts/Base.astro";
+import SpeechBubble from "../components/blocks/SpeechBubble.astro";
+import { characterContent, getCharacterPortrait } from "../utils/characters";
+
+const { page, characters, origin_story, relationship, conversation, learning_paths } = characterContent;
+---
+
+<Base title={page.title} description={page.description}>
+  <header class="band section">
+    <div class="frame characters-reading">
+      <p class="eyebrow">{page.eyebrow}</p>
+      <h1 class="characters-title">{page.title}</h1>
+      <p class="characters-lead">{page.intro}</p>
+      <aside class="characters-notice" aria-label="登場人物について">
+        <p>{page.fiction_notice}</p>
+      </aside>
+    </div>
+  </header>
+
+  <section class="band section" aria-label="ふたりのプロフィール">
+    <div class="frame characters-profiles">
+      {characters.map((character) => (
+        <article class="character-profile" id={character.id} aria-labelledby={`${character.id}-name`}>
+          <header class="character-profile__header">
+            <img
+              class="character-profile__portrait"
+              src={getCharacterPortrait(character.id, "neutral", "large")}
+              alt={character.visual.alt_text}
+              width="256"
+              height="256"
+              loading="lazy"
+              decoding="async"
+            />
+            <div class="character-profile__identity">
+              <p class="character-profile__role">{character.role}</p>
+              <h2 id={`${character.id}-name`}>{character.display_name}</h2>
+              {character.reading && <p class="character-profile__reading">{character.reading}</p>}
+              <p class="character-profile__age">{character.age_setting}の設定</p>
+            </div>
+          </header>
+          <p class="character-profile__summary">{character.short_profile}</p>
+          <p>{character.long_profile}</p>
+          <h3>大切にしていること</h3>
+          <ul>{character.values.map((value) => <li>{value}</li>)}</ul>
+          <h3>よく口にする問い</h3>
+          <ul>{character.frequent_questions.map((question) => <li>{question}</li>)}</ul>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section class="band section" aria-labelledby="characters-origin">
+    <div class="frame characters-reading characters-story">
+      <p class="eyebrow">{origin_story.label}</p>
+      <h2 id="characters-origin">{origin_story.heading}</h2>
+      <p>{origin_story.text}</p>
+      <h2>{relationship.heading}</h2>
+      <p>{relationship.text}</p>
+    </div>
+  </section>
+
+  <section class="band section" aria-labelledby="characters-conversation">
+    <div class="frame characters-reading">
+      <p class="eyebrow">{conversation.label}</p>
+      <h2 id="characters-conversation">{conversation.heading}</h2>
+      {conversation.turns.map((turn) => (
+        <SpeechBubble
+          speaker={turn.speaker === "director" ? "question" : "answer"}
+          expression={turn.expression}
+          text={turn.text}
+        />
+      ))}
+    </div>
+  </section>
+
+  <section class="band section" aria-labelledby="characters-next">
+    <div class="frame">
+      <div class="characters-reading characters-next-intro">
+        <h2 id="characters-next">いま気になることから、読んでみましょう。</h2>
+        <p>{page.closing}</p>
+      </div>
+      <div class="characters-next">
+        {learning_paths.map((path) => (
+          <article class="characters-next__item">
+            <h3>{path.title}</h3>
+            <p>{path.description}</p>
+            <a href={path.href}>{path.label}<span aria-hidden="true"> →</span></a>
+          </article>
+        ))}
+      </div>
+      <p class="characters-editorial">
+        {page.editorial_note} <a href={page.editorial_link.href}>{page.editorial_link.label}</a>
+      </p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .characters-reading { max-width: min(100%, 48rem); margin-inline: auto; }
+  .characters-title { font-size: clamp(2rem, 1.5rem + 2vw, 3rem); line-height: 1.45; margin-block: .6rem 1.5rem; }
+  .characters-lead, .character-profile p, .characters-story p, .characters-next p { line-height: 1.95; }
+  .characters-notice { margin-top: 1.5rem; padding: 1rem 1.25rem; border: 1px solid var(--color-border); border-radius: .75rem; color: var(--color-muted); font-size: .875rem; line-height: 1.9; }
+  .characters-notice p { margin: 0; }
+  .characters-profiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
+  .character-profile { min-width: 0; padding: clamp(1.25rem, 1rem + 1vw, 2rem); border: 1px solid var(--color-border); border-radius: 1rem; scroll-margin-top: calc(var(--header-height, 5rem) + 1.5rem); }
+  .character-profile__header { display: grid; grid-template-columns: 7rem minmax(0, 1fr); align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+  .character-profile__portrait { display: block; width: 7rem; height: 7rem; object-fit: contain; }
+  .character-profile__identity { min-width: 0; }
+  .character-profile__header h2 { margin: .35rem 0; font-size: 1.65rem; line-height: 1.45; }
+  .character-profile__header p { margin: 0; }
+  .character-profile__role { font-size: .8rem; }
+  .character-profile__reading, .character-profile__age { font-size: .8rem; color: var(--color-muted); }
+  .character-profile__summary { font-weight: 600; }
+  .character-profile h3 { font-size: 1rem; margin-block: 1.75rem .75rem; }
+  .character-profile ul { padding-left: 1.3em; margin: 0; line-height: 1.9; }
+  .character-profile li + li { margin-top: .35rem; }
+  .characters-story h2 { margin-block: .5rem 1rem; line-height: 1.6; }
+  .characters-story p + h2 { margin-top: 2.5rem; }
+  .characters-next-intro { margin-bottom: 2rem; }
+  .characters-next-intro h2, #characters-conversation { line-height: 1.6; }
+  .characters-next { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; }
+  .characters-next__item { min-width: 0; padding: 1.5rem; border: 1px solid var(--color-border); border-radius: .75rem; }
+  .characters-next__item h3 { margin: 0; font-size: 1.15rem; line-height: 1.65; }
+  .characters-next__item a { display: inline-block; font-weight: 600; text-underline-offset: .2em; }
+  .characters-editorial { margin-top: 2rem; font-size: .875rem; color: var(--color-muted); line-height: 1.9; }
+  @media (max-width: 800px) {
+    .characters-profiles, .characters-next { grid-template-columns: minmax(0, 1fr); }
+    .character-profile__header { grid-template-columns: 6rem minmax(0, 1fr); }
+    .character-profile__portrait { width: 6rem; height: 6rem; }
+  }
+  @media (max-width: 380px) {
+    .character-profile__header { grid-template-columns: 4rem minmax(0, 1fr); gap: .75rem; }
+    .character-profile__portrait { width: 4rem; height: 4rem; }
+  }
+</style>

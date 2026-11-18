@@ -4,7 +4,8 @@ export function createPlugin() {
     id: 'pharmacy-meo-blocks', version: '1.0.0',
     admin: { portableTextBlocks: [
       { type: 'meo_speech', label: 'MEOの会話', icon: 'code', fields: [
-        { type: 'select', action_id: 'speaker', label: '話し手（架空の案内役）', options: [{label:'質問する店長',value:'question'},{label:'解説する薬剤師',value:'answer'}] },
+        { type: 'select', action_id: 'speaker', label: '話し手（架空の案内役）', options: [{label:'薬局長（質問）',value:'question'},{label:'青葉まこと（解説）',value:'answer'}] },
+        { type: 'select', action_id: 'expression', label: '表情（任意・人物に合わない場合は通常）', options: [{label:'通常',value:'neutral'},{label:'質問（薬局長）',value:'question'},{label:'納得（薬局長）',value:'agree'},{label:'解説（青葉）',value:'explain'},{label:'考える（青葉）',value:'think'}] },
         { type: 'text_input', action_id: 'text', label: 'せりふ', multiline: true },
       ] },
       { type: 'meo_note', label: '大切なポイント', icon: 'code', fields: [

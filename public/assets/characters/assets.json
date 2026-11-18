@@ -1,0 +1,100 @@
+{
+  "updated_at": "2026-11-19",
+  "assets": [
+    {
+      "file": "character-design-approved.png",
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "mode": "RGB",
+      "alpha": null,
+      "bytes": 2020783,
+      "sha256": "603a6ff6313f599388fa9ed1866badafc6071e2ac233b71d7d2bcd36f7269b57"
+    },
+    {
+      "file": "director-neutral.png",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "alpha": [
+        0,
+        255
+      ],
+      "bytes": 1237678,
+      "sha256": "9807f85ce33e85c9bc8e1a8810d5437efda3721cbb34d89be1a9be87c7e51372"
+    },
+    {
+      "file": "director-question.png",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "alpha": [
+        0,
+        255
+      ],
+      "bytes": 1220631,
+      "sha256": "da01c713c860bec45cd7be91ebd49678c47a32cf90de3cb233e194846bd91431"
+    },
+    {
+      "file": "director-agree.png",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "alpha": [
+        0,
+        255
+      ],
+      "bytes": 1283635,
+      "sha256": "b419d4b3add84a87108fc480e4196003219fb836e402332c981d043a7f2b9c06"
+    },
+    {
+      "file": "aoba-neutral.png",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "alpha": [
+        0,
+        255
+      ],
+      "bytes": 1143202,
+      "sha256": "62640eeb32103165fda70a2fd4250d7e240abbb673bdf66c0e765e497abd9c47"
+    },
+    {
+      "file": "aoba-explain.png",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "alpha": [
+        0,
+        255
+      ],
+      "bytes": 1305042,
+      "sha256": "f2a36f06c3079a27cf8a45ff19a4f323ec3556df1c065135a18ee2307d388d72"
+    },
+    {
+      "file": "aoba-think.png",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "alpha": [
+        0,
+        255
+      ],
+      "bytes": 1126454,
+      "sha256": "8fb75c898e5451797e80329526660d712efce91ec309cd2d401f20667703cecf"
+    }
+  ]
+}

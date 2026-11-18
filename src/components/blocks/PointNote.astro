@@ -1,0 +1,5 @@
+---
+const value = Astro.props.node ?? Astro.props;
+---
+<aside class="point"><strong>{String(value.title ?? 'ここがポイント')}</strong><p>{String(value.text ?? '')}</p></aside>
+<style>.point{border-left:4px solid var(--color-brand);padding:1rem 1.25rem;background:var(--color-fill);margin:1.5rem 0}.point p{margin:.5rem 0 0;white-space:pre-line;line-height:1.9}</style>

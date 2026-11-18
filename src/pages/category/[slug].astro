@@ -50,7 +50,7 @@ const filteredPosts = posts.map((post) => ({
 }));
 ---
 
-<Base title={`${term.label} posts`} description={`All posts in ${term.label}`}>
+<Base title={`${term.label} posts`} description={`記事一覧 in ${term.label}`}>
 	<header class="band intro">
 		<div class="frame archive-intro">
 			<div class="archive-intro__text">
@@ -61,7 +61,7 @@ const filteredPosts = posts.map((post) => ({
 				</p>
 			</div>
 			<a href="/posts" class="arrow-link">
-				All posts
+				記事一覧
 				<svg
 					viewBox="0 0 24 24"
 					fill="none"
@@ -100,7 +100,7 @@ const filteredPosts = posts.map((post) => ({
 				) : (
 					<div class="empty-state">
 						<h2 class="empty-state__title">
-							{cursor ? "No more posts" : "Nothing here yet"}
+							{cursor ? "記事はここまでです" : "Nothing here yet"}
 						</h2>
 						<p class="empty-state__text">
 							{cursor
@@ -112,7 +112,7 @@ const filteredPosts = posts.map((post) => ({
 								href={cursor ? `/category/${term.slug}` : "/posts"}
 								class="btn btn--ghost"
 							>
-								{cursor ? "Back to the first page" : "Browse all posts"}
+								{cursor ? "最初のページに戻る" : "記事一覧を見る"}
 							</a>
 						</div>
 					</div>

@@ -13,8 +13,6 @@ interface Props extends SpeechValue {
 const value = Astro.props.node ?? Astro.props;
 const question = value.speaker === 'question';
 const character = getCharacterForSpeaker(value.speaker);
-// 吹き出しでの役割表示（キャラクターが架空であることは /characters/ と運営者情報で説明）
-const roleLabel = question ? '聞き手' : '解説役';
 const portrait = getCharacterPortrait(character.id, Astro.props.expression ?? value.expression);
 ---
 <aside class:list={['speech', {'speech--answer': !question}]} aria-label={`${character.display_name}のせりふ`}>
@@ -22,7 +20,7 @@ const portrait = getCharacterPortrait(character.id, Astro.props.expression ?? va
   <div class="speech__body">
     <p class="speech__label">
       <a href={`/characters/#${character.id}`}>{character.display_name}</a>
-      <small>{roleLabel}</small>
+      <span class="speech__sep" aria-hidden="true">｜</span><small>{character.title_label}</small>
     </p>
     <p>{String(value.text ?? '')}</p>
   </div>
@@ -33,10 +31,11 @@ const portrait = getCharacterPortrait(character.id, Astro.props.expression ?? va
   .speech__avatar { display: block; width: 4rem; height: 4rem; object-fit: contain; }
   .speech__body { min-width: 0; padding: 1rem 1.25rem; border: 1px solid var(--color-border); border-radius: 0 1rem 1rem 1rem; background: var(--color-surface); overflow-wrap: anywhere; }
   .speech__body p { margin: 0; white-space: pre-line; line-height: 1.9; }
-  .speech__body .speech__label { display: flex; flex-wrap: wrap; align-items: baseline; gap: .15rem .5rem; font-size: .875rem; font-weight: 700; margin-bottom: .45rem; }
+  .speech__body .speech__label { display: flex; flex-wrap: wrap; align-items: baseline; gap: .15rem .25rem; font-size: .875rem; font-weight: 700; margin-bottom: .45rem; }
   .speech__label a { color: inherit; text-underline-offset: .2em; }
-  .speech__label small { font-size: .7rem; font-weight: 400; color: var(--color-muted); }
-  /* 青葉まこと（answer）は淡いブランド色で、薬局長と見分けやすくする */
+  .speech__sep { color: var(--color-muted); font-weight: 400; }
+  .speech__label small { font-size: .75rem; font-weight: 400; color: var(--color-muted); }
+  /* 青葉まこと（answer）は淡いブランド色で、三浦けんじ（薬局長）と見分けやすくする */
   .speech--answer .speech__body { background: color-mix(in srgb, var(--color-brand) 6%, var(--color-surface)); border-color: color-mix(in srgb, var(--color-brand) 28%, var(--color-border)); }
   .speech--answer .speech__label a { color: var(--color-brand); }
   @media (max-width: 600px) {

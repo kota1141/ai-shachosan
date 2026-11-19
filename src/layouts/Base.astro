@@ -211,6 +211,13 @@ const year = new Date().getFullYear();
 						>
 					</div>
 					<a
+						href="/contact"
+						class="btn btn--sm header-contact"
+						aria-current={navCurrent("/contact")}
+					>
+						相談する
+					</a>
+					<a
 						href="/search"
 						class="icon-btn site-search-link"
 						aria-label="検索"
@@ -1004,10 +1011,10 @@ const year = new Date().getFullYear();
 				position: sticky;
 				top: 0;
 				z-index: 50;
-				background: color-mix(in srgb, var(--color-bg) 82%, transparent);
-				backdrop-filter: saturate(1.4) blur(12px);
-				-webkit-backdrop-filter: saturate(1.4) blur(12px);
+				/* 不透明にして、スクロール中の本文が透けて読みにくくならないようにする */
+				background: var(--color-bg);
 				border-bottom: 1px solid var(--color-border);
+				box-shadow: 0 1px 0 color-mix(in srgb, var(--color-text) 4%, transparent);
 			}
 
 			.site-header::before,
@@ -1138,6 +1145,11 @@ const year = new Date().getFullYear();
 			.site-search {
 				position: relative;
 				width: var(--search-input-width);
+			}
+
+			/* スマホだけ表示する相談ボタン（PCではメニューの「メールで相談」を使う） */
+			.header-contact {
+				display: none;
 			}
 
 			.site-search__icon {
@@ -1436,7 +1448,7 @@ const year = new Date().getFullYear();
 				}
 			}
 
-			/* Phones: brand and actions on the first row, the nav on its own row */
+			/* Phones: brand and actions on the first row, the nav on one compact row below */
 			@media (max-width: 640px) {
 				.site-header {
 					position: relative;
@@ -1444,18 +1456,50 @@ const year = new Date().getFullYear();
 
 				.site-header__inner {
 					flex-wrap: wrap;
-					row-gap: var(--spacing-1);
-					padding-block: var(--spacing-3) var(--spacing-2);
+					column-gap: var(--spacing-3);
+					row-gap: 0;
+					min-height: 0;
+					padding-block: var(--spacing-2) 0;
 				}
 
 				.site-nav {
 					order: 3;
 					flex-basis: 100%;
-					margin-inline-start: -10px;
+					margin-inline: -10px;
+				}
+
+				/* 1行に収める。入りきらない幅では横にスクロールする */
+				.site-nav ul {
+					flex-wrap: nowrap;
+					overflow-x: auto;
+					scrollbar-width: none;
+					padding-block: var(--spacing-1) var(--spacing-2);
+				}
+
+				.site-nav ul::-webkit-scrollbar {
+					display: none;
 				}
 
 				.site-nav a {
-					padding: 8px 10px;
+					padding: 6px 10px;
+					font-size: 0.8125rem;
+				}
+
+				/* 相談は上の段のボタンにまとめる */
+				.site-nav li:has(> a[href="/contact"]) {
+					display: none;
+				}
+
+				.site-header__actions {
+					gap: var(--spacing-2);
+				}
+
+				.header-contact {
+					display: inline-flex;
+					min-height: 2.25rem;
+					padding-inline: var(--spacing-4);
+					font-size: var(--font-size-sm);
+					white-space: nowrap;
 				}
 
 				.site-search {
@@ -1464,8 +1508,8 @@ const year = new Date().getFullYear();
 
 				.site-search-link {
 					display: inline-grid;
-					width: 2.5rem;
-					height: 2.5rem;
+					width: 2.25rem;
+					height: 2.25rem;
 				}
 			}
 

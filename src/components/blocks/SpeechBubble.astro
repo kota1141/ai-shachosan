@@ -13,6 +13,8 @@ interface Props extends SpeechValue {
 const value = Astro.props.node ?? Astro.props;
 const question = value.speaker === 'question';
 const character = getCharacterForSpeaker(value.speaker);
+// 吹き出しでの役割表示（キャラクターが架空であることは /characters/ と運営者情報で説明）
+const roleLabel = question ? '聞き手' : '解説役';
 const portrait = getCharacterPortrait(character.id, Astro.props.expression ?? value.expression);
 ---
 <aside class:list={['speech', {'speech--answer': !question}]} aria-label={`${character.display_name}のせりふ`}>
@@ -20,7 +22,7 @@ const portrait = getCharacterPortrait(character.id, Astro.props.expression ?? va
   <div class="speech__body">
     <p class="speech__label">
       <a href={`/characters/#${character.id}`}>{character.display_name}</a>
-      <small>架空の案内役</small>
+      <small>{roleLabel}</small>
     </p>
     <p>{String(value.text ?? '')}</p>
   </div>

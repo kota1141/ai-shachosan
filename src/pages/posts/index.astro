@@ -12,7 +12,7 @@ const {
 	cacheHint,
 	nextCursor,
 } = await getEmDashCollection("posts", {
-	orderBy: { published_at: "desc" },
+	orderBy: { learning_order: "asc" },
 	limit: 20,
 	cursor,
 });

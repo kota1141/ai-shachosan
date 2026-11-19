@@ -1,12 +1,47 @@
 ---
+import { getCharacterForSpeaker, getCharacterPortrait } from "../../utils/characters";
+
+interface SpeechValue {
+  speaker?: unknown;
+  text?: unknown;
+  expression?: unknown;
+}
+interface Props extends SpeechValue {
+  node?: SpeechValue;
+}
+
 const value = Astro.props.node ?? Astro.props;
 const question = value.speaker === 'question';
-const speaker = question ? '質問する店長' : '解説する薬剤師';
+const character = getCharacterForSpeaker(value.speaker);
+const portrait = getCharacterPortrait(character.id, Astro.props.expression ?? value.expression);
 ---
-<aside class:list={['speech', {'speech--answer': !question}]} aria-label={`${speaker}のせりふ`}>
-  <div class="speech__avatar" aria-hidden="true">{question ? '？' : '！'}</div>
-  <div class="speech__body"><p class="speech__label">{speaker} <small>架空の案内役</small></p><p>{String(value.text ?? '')}</p></div>
+<aside class:list={['speech', {'speech--answer': !question}]} aria-label={`${character.display_name}のせりふ`}>
+  <img class="speech__avatar" src={portrait} alt="" width="128" height="128" loading="lazy" decoding="async" />
+  <div class="speech__body">
+    <p class="speech__label">
+      <a href={`/characters/#${character.id}`}>{character.display_name}</a>
+      <small>架空の案内役</small>
+    </p>
+    <p>{String(value.text ?? '')}</p>
+  </div>
 </aside>
 <style>
-.speech{display:flex;gap:1rem;margin:1.75rem 0;align-items:flex-start}.speech--answer{margin-left:1rem}.speech__avatar{flex:0 0 2.75rem;height:2.75rem;display:grid;place-items:center;border:1px solid var(--color-border);border-radius:50%;font-weight:700}.speech__body{padding:1rem 1.25rem;border:1px solid var(--color-border);border-radius:0 1rem 1rem 1rem;flex:1;background:var(--color-surface)}.speech__body p{margin:0;white-space:pre-line;line-height:1.9}.speech__body .speech__label{font-size:.8rem;font-weight:700;margin-bottom:.45rem}.speech__label small{font-size:.7rem;font-weight:400;color:var(--color-muted);margin-left:.4rem}@media(max-width:600px){.speech{gap:.6rem}.speech__body{padding:.9rem}.speech--answer{margin-left:0}}
+  .speech { display: grid; grid-template-columns: 4rem minmax(0, 1fr); gap: 1rem; margin: 1.75rem 0; align-items: start; }
+  .speech--answer { margin-left: 1rem; }
+  .speech__avatar { display: block; width: 4rem; height: 4rem; object-fit: contain; }
+  .speech__body { min-width: 0; padding: 1rem 1.25rem; border: 1px solid var(--color-border); border-radius: 0 1rem 1rem 1rem; background: var(--color-surface); overflow-wrap: anywhere; }
+  .speech__body p { margin: 0; white-space: pre-line; line-height: 1.9; }
+  .speech__body .speech__label { display: flex; flex-wrap: wrap; align-items: baseline; gap: .15rem .5rem; font-size: .875rem; font-weight: 700; margin-bottom: .45rem; }
+  .speech__label a { color: inherit; text-underline-offset: .2em; }
+  .speech__label small { font-size: .7rem; font-weight: 400; color: var(--color-muted); }
+  @media (max-width: 600px) {
+    .speech { grid-template-columns: 3.5rem minmax(0, 1fr); gap: .6rem; }
+    .speech__avatar { width: 3.5rem; height: 3.5rem; }
+    .speech__body { padding: .85rem; }
+    .speech--answer { margin-left: 0; }
+  }
+  @media (max-width: 380px) {
+    .speech { grid-template-columns: 3rem minmax(0, 1fr); gap: .5rem; }
+    .speech__avatar { width: 3rem; height: 3rem; }
+  }
 </style>

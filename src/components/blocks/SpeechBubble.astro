@@ -34,6 +34,9 @@ const portrait = getCharacterPortrait(character.id, Astro.props.expression ?? va
   .speech__body .speech__label { display: flex; flex-wrap: wrap; align-items: baseline; gap: .15rem .5rem; font-size: .875rem; font-weight: 700; margin-bottom: .45rem; }
   .speech__label a { color: inherit; text-underline-offset: .2em; }
   .speech__label small { font-size: .7rem; font-weight: 400; color: var(--color-muted); }
+  /* 青葉まこと（answer）は淡いブランド色で、薬局長と見分けやすくする */
+  .speech--answer .speech__body { background: color-mix(in srgb, var(--color-brand) 6%, var(--color-surface)); border-color: color-mix(in srgb, var(--color-brand) 28%, var(--color-border)); }
+  .speech--answer .speech__label a { color: var(--color-brand); }
   @media (max-width: 600px) {
     .speech { grid-template-columns: 3.5rem minmax(0, 1fr); gap: .6rem; }
     .speech__avatar { width: 3.5rem; height: 3.5rem; }

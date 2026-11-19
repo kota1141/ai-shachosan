@@ -1,28 +1,174 @@
 ---
-import Base from '../layouts/Base.astro';
-import { CONTACT, OPERATOR, hasContact } from '../utils/site-info';
+import Base from "../layouts/Base.astro";
+import { CONTACT_EMAIL, CONTACT_MAILTO, OPERATOR } from "../utils/site-info";
 ---
-<Base title="相談したい内容を整理する" description="MEO支援の相談前に整理しておきたいことと、LINE・メールでの相談方法をまとめています。">
-<header class="band intro"><div class="frame"><p class="eyebrow">相談の準備</p><h1 class="intro__title">いま、どこで困っていますか？</h1><p class="intro__lead">ご相談はLINEまたはメールで受け付けます。送る前に、下の5つを整理しておくと話が早く進みます。</p></div></header>
-<section class="band section"><div class="frame" style="max-width:760px">
-	<h2>相談前にまとめる5つのこと</h2>
-	<ol style="line-height:2.2"><li>薬局名と所在地</li><li>Googleビジネスプロフィールを管理できる人</li><li>増やしたい相談やサービス</li><li>いま困っていること</li><li>初期整備だけか、継続保守まで必要か</li></ol>
-	<p>患者さんの名前、病歴、処方内容は書かないでください。</p>
-	<h2 style="margin-top:2rem">相談の送り先</h2>
-	{hasContact ? (
-		<p class="contact-actions">
-			{CONTACT.lineUrl && <a class="btn" href={CONTACT.lineUrl} target="_blank" rel="noopener noreferrer">LINEで相談する</a>}
-			{CONTACT.email && <a class="btn btn--ghost" href={`mailto:${CONTACT.email}?subject=${encodeURIComponent('MEOの相談')}`}>メールで相談する</a>}
-		</p>
-	) : (
-		<p>LINE・メールの連絡先は準備中です。</p>
-	)}
-	<p>担当：{OPERATOR.display}</p>
-	<p>まだ相談するか決めていない方は、先に自分の薬局を確認してみてください。</p>
-	<p><a class="btn btn--ghost" href="/posts/first-checklist">まず自分で確認する</a></p>
-</div></section>
+
+<Base title="メールで相談する" description="薬局のMEOについて、メールで相談できます。まだ相談内容がまとまっていなくても大丈夫です。">
+	<header class="band intro">
+		<div class="frame">
+			<p class="eyebrow">お問い合わせ</p>
+			<h1 class="intro__title contact-title">薬局のMEOについて、<br />メールで相談する</h1>
+			<p class="intro__lead">「何から始めればよいか」「自分でできる範囲を知りたい」「代行や保守を相談したい」など、今の状況をお聞かせください。まだ相談内容がまとまっていなくても大丈夫です。</p>
+		</div>
+	</header>
+
+	<section class="band section">
+		<div class="frame contact">
+			<div class="contact__card">
+				<a class="btn contact__primary" href={CONTACT_MAILTO}>メールを作成する</a>
+
+				<p class="contact__label">送り先のメールアドレス</p>
+				<div class="contact__address">
+					<span class="contact__email" id="contact-email">{CONTACT_EMAIL}</span>
+					<button type="button" class="btn btn--ghost contact__copy" data-copy={CONTACT_EMAIL} aria-describedby="copy-status">
+						メールアドレスをコピー
+					</button>
+				</div>
+				<p class="contact__status" id="copy-status" role="status" aria-live="polite"></p>
+
+				<p class="contact__note">
+					ボタンを押すと、お使いのメールアプリなどの作成画面が開きます。この操作だけではメールは送信されません。開かない場合は、アドレスをコピーして普段お使いのメールからお送りください。
+				</p>
+				<p class="contact__note">担当：{OPERATOR.display}</p>
+			</div>
+
+			<div class="contact__privacy">
+				<h2>個人情報について</h2>
+				<p>お送りいただいた情報は、相談への返信や、ご希望に応じたサービスの案内・見積もりのために使用します。詳しくは<a href="/privacy/">プライバシーポリシー</a>をご確認ください。</p>
+				<p><strong>患者さんの氏名、処方箋の画像、病歴・服薬情報などは記載・添付しないでください。</strong></p>
+			</div>
+
+			<details class="contact__hints">
+				<summary>書いておくと話が早いこと（すべて任意）</summary>
+				<ul>
+					<li>薬局名と地域</li>
+					<li>Googleビジネスプロフィールを管理している人</li>
+					<li>増やしたい相談やサービス</li>
+					<li>いま困っていること</li>
+					<li>最初の整備だけか、毎月の保守まで考えているか</li>
+				</ul>
+				<p>分からないところは空けたままで大丈夫です。必要なことは返信で確認します。</p>
+			</details>
+
+			<p class="contact__self">まだ相談するか決めていない方は、先に自分の薬局を確認してみてください。<br /><a href="/posts/first-checklist">薬局のGoogleマップ、まず確認したい10項目 →</a></p>
+		</div>
+	</section>
 </Base>
 
+<script>
+	const status = document.getElementById("copy-status");
+	const emailEl = document.getElementById("contact-email");
+
+	function selectAddress() {
+		if (!emailEl) return;
+		const range = document.createRange();
+		range.selectNodeContents(emailEl);
+		const sel = window.getSelection();
+		sel?.removeAllRanges();
+		sel?.addRange(range);
+	}
+
+	document.querySelectorAll<HTMLButtonElement>("[data-copy]").forEach((button) => {
+		button.addEventListener("click", async () => {
+			const text = button.dataset.copy ?? "";
+			try {
+				await navigator.clipboard.writeText(text);
+				if (status) status.textContent = "コピーしました";
+			} catch {
+				// Clipboard can be blocked (permissions, non-secure context).
+				// Leave the address selected so it can be copied by hand.
+				selectAddress();
+				if (status)
+					status.textContent =
+						"自動でコピーできませんでした。選択されたアドレスを長押し、または右クリックしてコピーしてください。";
+			}
+		});
+	});
+</script>
+
 <style>
-	.contact-actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+	.contact {
+		max-width: 44rem;
+		display: grid;
+		gap: 2.5rem;
+	}
+	.contact__card {
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-xl);
+		padding: clamp(1.25rem, 1rem + 2vw, 2rem);
+		display: grid;
+		gap: .75rem;
+	}
+	.contact__primary {
+		justify-self: start;
+		min-height: 3rem;
+		padding-inline: 1.75rem;
+		font-size: 1.0625rem;
+	}
+	.contact__label {
+		margin-top: .75rem;
+		font-size: var(--font-size-sm);
+		color: var(--color-muted);
+	}
+	.contact__address {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: .75rem;
+	}
+	.contact__email {
+		font-size: 1.125rem;
+		font-weight: 600;
+		user-select: all;
+		overflow-wrap: anywhere;
+	}
+	.contact__copy {
+		min-height: 2.75rem;
+	}
+	.contact__status {
+		min-height: 1.5em;
+		color: var(--color-brand);
+		font-weight: 600;
+	}
+	.contact__note {
+		line-height: 1.8;
+		color: var(--color-text-secondary);
+	}
+	.contact__privacy p,
+	.contact__self {
+		line-height: 1.85;
+	}
+	.contact__privacy h2 {
+		margin-bottom: .75rem;
+	}
+	.contact__hints {
+		border-top: 1px solid var(--color-border);
+		padding-top: 1.25rem;
+	}
+	.contact-title {
+		font-size: clamp(1.75rem, 1.3rem + 2.4vw, 3rem);
+		line-height: 1.3;
+		word-break: keep-all;
+		overflow-wrap: anywhere;
+	}
+	.contact__hints summary {
+		cursor: pointer;
+		font-weight: 600;
+		padding-block: .6rem;
+		list-style: none;
+	}
+	.contact__hints summary::-webkit-details-marker { display: none; }
+	.contact__hints summary::before {
+		content: "＋";
+		display: inline-block;
+		width: 1.5em;
+		color: var(--color-brand);
+	}
+	.contact__hints[open] summary::before { content: "－"; }
+	.contact__hints ul {
+		margin: .75rem 0 .75rem 1.25rem;
+		list-style: disc;
+		line-height: 2;
+	}
 </style>

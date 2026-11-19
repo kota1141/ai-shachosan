@@ -3,5 +3,5 @@ const value = Astro.props.node ?? Astro.props;
 const headers = String(value.headersText ?? '').split('|').map(t=>t.trim());
 const rows = String(value.rowsText ?? '').split('\n').filter(Boolean).map(r=>r.split('|').map(t=>t.trim()));
 ---
-<div class="table-scroll" role="region" aria-label="比較表" tabindex="0"><table><thead><tr>{headers.map(h=><th scope="col">{h}</th>)}</tr></thead><tbody>{rows.map(row=><tr>{row.map(cell=><td>{cell}</td>)}</tr>)}</tbody></table></div>
-<style>.table-scroll{overflow-x:auto;margin:1.5rem 0}table{border-collapse:collapse;width:100%;min-width:420px;font-size:.94rem}th,td{padding:.85rem;text-align:left;vertical-align:top;border:1px solid var(--color-border);line-height:1.8}th{background:var(--color-fill)}</style>
+<p class="table-hint" aria-hidden="true">表は横にスクロールできます →</p><div class="table-scroll" role="region" aria-label="比較表" tabindex="0"><table><thead><tr>{headers.map(h=><th scope="col">{h}</th>)}</tr></thead><tbody>{rows.map(row=><tr>{row.map(cell=><td>{cell}</td>)}</tr>)}</tbody></table></div>
+<style>.table-hint{display:none;margin:1.5rem 0 .35rem;font-size:.8125rem;color:var(--color-muted)}.table-hint+.table-scroll{margin-top:0}.table-scroll{overflow-x:auto;margin:1.5rem 0;-webkit-overflow-scrolling:touch}@media (max-width:600px){.table-hint{display:block}}table{border-collapse:collapse;width:100%;min-width:420px;font-size:.94rem}th,td{padding:.85rem;text-align:left;vertical-align:top;border:1px solid var(--color-border);line-height:1.8}th{background:var(--color-fill)}</style>

@@ -1,5 +1,8 @@
 # 次のAIに渡す実行指示
 
+> **2026-11-19 更新（Claude）**：本番は Cloudflare Workers（D1 / R2）＋ ai-shachosan.com で稼働中。相談の受付は **メール（taiwa.kawamura@gmail.com）** に決定し、`/contact` に「メールを作成する」ボタン・アドレス表示・コピーを実装済み。フォーム送信・問い合わせDB・メール送信APIは使わない。運営者・連絡先・ポリシー日付は `src/utils/site-info.ts` の1か所で管理する。プライバシーポリシーは `/privacy/`。詳細は `VALIDATION.md` 先頭。
+
+
 このフォルダは漢方薬局PJの「薬局MEOの教室」の既存実装です。
 まず`CLAUDE_START_HERE.md`を読み、そこに示した順番でREADME.md、PROJECT_PLAN.md、EDITORIAL.md、VALIDATION.md、AGENTS.mdを確認してください。
 人物設定は`CHARACTER_BIBLE.md`と`content/characters.json`、承認済み素材は`public/assets/characters/ASSETS.md`を参照します。

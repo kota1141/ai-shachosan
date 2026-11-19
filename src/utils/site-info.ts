@@ -1,6 +1,6 @@
-// Operator and contact details, kept in one place so pages never invent them.
-// Leave a contact value empty until the real address is confirmed: pages then
-// show "準備中" instead of a link.
+// Operator and contact details, defined once and referenced by the contact
+// page, footer, about page and privacy policy. Do not fill a value here unless
+// the operator has confirmed it.
 
 export const OPERATOR = {
 	name: "川村鴻太",
@@ -8,11 +8,18 @@ export const OPERATOR = {
 	display: "川村鴻太｜TAiWĀ代表／薬剤師",
 } as const;
 
-export const CONTACT = {
-	/** LINE公式アカウントの友だち追加URL（例: https://lin.ee/xxxx）。未確定なら空。 */
-	lineUrl: "",
-	/** 相談受付用のメールアドレス。未確定なら空。 */
-	email: "",
-} as const;
+export const CONTACT_EMAIL = "taiwa.kawamura@gmail.com";
 
-export const hasContact = Boolean(CONTACT.lineUrl || CONTACT.email);
+export const CONTACT_SUBJECT = "【薬局MEOの教室】MEOの相談";
+export const CONTACT_BODY = "ご相談内容：\r\n\r\n薬局名（任意）：\r\nお名前（任意）：\r\n";
+
+// encodeURIComponent keeps the Japanese subject/body valid UTF-8 in mailto:.
+export const CONTACT_MAILTO = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
+	CONTACT_SUBJECT,
+)}&body=${encodeURIComponent(CONTACT_BODY)}`;
+
+/** Policy dates. Set when the operator approves the published text. */
+export const PRIVACY_POLICY = {
+	established: "2026年11月19日",
+	updated: "2026年11月19日",
+} as const;

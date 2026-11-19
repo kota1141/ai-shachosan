@@ -1,12 +1,322 @@
 ---
-import Base from '../layouts/Base.astro';
+import { getEmDashEntry } from "emdash";
+import Base from "../layouts/Base.astro";
+import ContactActions from "../components/ContactActions.astro";
+import { OPERATOR } from "../utils/site-info";
+
+// 小川薬局の記事は公開されたときだけリンクする（下書きのあいだは404になるため）
+const { entry: ogawa } = await getEmDashEntry("posts", "ogawa-practice");
+
+const services = [
+	{
+		no: "01",
+		name: "初期整備",
+		lead: "今の掲載内容を点検し、最初に整えるところをまとめて直します。",
+		items: [
+			"店舗情報・カテゴリの確認",
+			"写真と相談への案内の整理",
+			"口コミ依頼の方法づくり",
+			"現状の数字の記録",
+		],
+		note: "成果物：改善項目と変更内容の一覧、今後の運用手順。",
+	},
+	{
+		no: "02",
+		name: "継続保守",
+		lead: "整えた情報を、薬局の予定や変化に合わせて保ちます。",
+		items: [
+			"営業時間などの変更対応",
+			"掲載情報の定期確認",
+			"口コミ返信の下書き",
+			"定期的な数字の確認",
+		],
+		note: "作業回数・対応時間・追加費用の範囲は契約前に明確にします。",
+	},
+	{
+		no: "03",
+		name: "相談導線の改善",
+		lead: "見つけた人が、迷わず相談までたどり着けるようにします。",
+		items: [
+			"Googleマップからホームページへの流れ",
+			"ホームページから相談予約までの流れ",
+			"分かりにくい案内の見直し",
+		],
+		note: "順位や売上を保証する商品ではありません。",
+	},
+];
+
+const steps = [
+	{ title: "メールで今の状況を送る", text: "相談内容がまとまっていなくても大丈夫です。" },
+	{ title: "内容を確認して返信", text: "分からないところは、返信で確認します。" },
+	{ title: "必要な支援の範囲を整理", text: "自分でできること、任せたいことを一緒に分けます。" },
+	{ title: "作業内容と条件を確認", text: "作業回数・対応時間・費用の範囲を確認してから、依頼するかを決めます。" },
+];
 ---
+
 <Base title="初期整備・保守のご案内" description="薬局のMEOをどこまで自分で行い、どこを任せるか整理します。">
-<header class="band intro"><div class="frame"><p class="eyebrow">薬局のMEO支援</p><h1 class="intro__title">整えるところから、続けるところまで。</h1><p class="intro__lead">必要な範囲を決めてから、依頼する。料金と契約条件は現在設計中です。</p></div></header>
-<section class="band section"><div class="frame"><div class="post-grid">
-<article><h2>初期整備</h2><p>店舗情報、カテゴリ、写真、相談への案内、口コミ依頼の方法、現状の数字を整えます。</p><p>成果物：改善項目と変更内容の一覧、今後の運用手順。</p></article>
-<article><h2>継続保守</h2><p>営業時間の変更、情報の確認、口コミ返信の下書き、定期的な数字の確認を支援します。</p><p>作業回数・対応時間・追加費用の範囲は契約前に明確にします。</p></article>
-<article><h2>相談導線の改善</h2><p>Googleマップからホームページ、相談予約までの分かりにくさを見直します。</p><p>順位や売上を保証する商品ではありません。</p></article>
-</div><p style="margin-top:2rem"><a class="btn" href="/contact">メールで相談する</a></p></div></section>
-<section class="band section"><div class="frame"><h2>事例について</h2><p>小川薬局の実践計画は、改善前後の成果を検証するためのものです。実績数値が確認できるまでは成功事例と表記しません。</p><p><a href="/posts/ogawa-practice">小川薬局で検証すること</a> ／ <a href="/posts/outsourcing-maintenance">代行・保守の選び方</a></p></div></section>
+	<header class="band intro">
+		<div class="frame">
+			<p class="eyebrow">薬局のMEO支援</p>
+			<h1 class="intro__title svc-title">整えるところから、<br />続けるところまで。</h1>
+			<p class="intro__lead svc-lead">必要な範囲を決めてから、依頼する。料金と契約条件は現在設計中です。</p>
+		</div>
+	</header>
+
+	<section class="band section" aria-labelledby="svc-list-title">
+		<div class="frame">
+			<h2 id="svc-list-title" class="sr-only">支援の種類</h2>
+			<ol class="svc-grid">
+				{services.map((s) => (
+					<li class="svc-card">
+						<p class="svc-card__no" aria-hidden="true">{s.no}</p>
+						<h3 class="svc-card__name">{s.name}</h3>
+						<p class="svc-card__lead">{s.lead}</p>
+						<p class="svc-card__label">主な内容</p>
+						<ul class="svc-card__items">
+							{s.items.map((item) => <li>{item}</li>)}
+						</ul>
+						<p class="svc-card__note">{s.note}</p>
+					</li>
+				))}
+			</ol>
+			<p class="svc-compare">
+				どれが合うか迷うときは、<a href="/posts/outsourcing-maintenance">初期整備・代行・保守の違い</a>を先に読むと整理しやすくなります。
+			</p>
+		</div>
+	</section>
+
+	<section class="band section" aria-labelledby="svc-contact-title">
+		<div class="frame svc-contact">
+			<div class="svc-contact__intro">
+				<p class="eyebrow">3つの支援に共通</p>
+				<h2 id="svc-contact-title" class="svc-contact__title">まずは、メールで相談する</h2>
+				<p class="svc-contact__text">どの支援が合うか分からない段階でも相談できます。薬局の状況を伺い、必要な範囲から一緒に整理します。</p>
+
+				<div class="svc-person">
+					<p class="svc-person__label">担当</p>
+					<p class="svc-person__name">{OPERATOR.name}</p>
+					<p class="svc-person__role">{OPERATOR.role}</p>
+					<a class="svc-person__link" href="/pages/about">運営者情報・編集方針 →</a>
+				</div>
+			</div>
+
+			<div class="svc-contact__body">
+				<h3 class="svc-flow__title">相談後の流れ</h3>
+				<ol class="svc-flow">
+					{steps.map((step, i) => (
+						<li class="svc-flow__step">
+							<span class="svc-flow__no" aria-hidden="true">{i + 1}</span>
+							<div>
+								<p class="svc-flow__name">{step.title}</p>
+								<p class="svc-flow__text">{step.text}</p>
+							</div>
+						</li>
+					))}
+				</ol>
+
+				<div class="svc-contact__card">
+					<ContactActions showPerson={false} />
+				</div>
+				<p class="svc-contact__more">
+					相談前に気をつけること（患者さんの情報は送らない、など）は<a href="/contact">お問い合わせページ</a>と<a href="/privacy/">プライバシーポリシー</a>にまとめています。
+				</p>
+			</div>
+		</div>
+	</section>
+
+	<section class="band section" aria-labelledby="svc-case-title">
+		<div class="frame"><div class="svc-case">
+			<h2 id="svc-case-title" class="svc-case__title">事例について</h2>
+			<p>小川薬局の実践計画は、改善前後の成果を検証するためのものです。実績数値が確認できるまでは成功事例と表記しません。</p>
+			{ogawa && (
+				<p><a href="/posts/ogawa-practice">小川薬局で検証すること →</a></p>
+			)}
+		</div></div>
+	</section>
 </Base>
+
+<style>
+	.svc-title {
+		font-size: clamp(2rem, 1.4rem + 3vw, 3.5rem);
+		line-height: 1.2;
+		word-break: keep-all;
+	}
+	.svc-lead {
+		margin-top: 1.25rem;
+	}
+
+	/* 3つの支援 */
+	.svc-grid {
+		list-style: none;
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+		gap: clamp(1rem, 0.75rem + 1vw, 1.5rem);
+	}
+	.svc-card {
+		display: flex;
+		flex-direction: column;
+		padding: clamp(1.25rem, 1rem + 1vw, 1.75rem);
+		border-radius: var(--radius-xl);
+		background: var(--color-surface);
+		box-shadow: var(--shadow-card);
+		border-top: 3px solid var(--color-brand);
+	}
+	.svc-card__no {
+		font-family: var(--font-mono);
+		font-size: var(--font-size-sm);
+		color: var(--color-brand);
+		letter-spacing: 0.05em;
+	}
+	.svc-card__name {
+		margin-top: 0.25rem;
+		font-size: var(--font-size-xl);
+		line-height: 1.4;
+	}
+	.svc-card__lead {
+		margin-top: 0.75rem;
+		line-height: 1.8;
+		color: var(--color-text);
+	}
+	.svc-card__label {
+		margin-top: 1.25rem;
+		font-size: var(--font-size-sm);
+		font-weight: 600;
+		color: var(--color-muted);
+	}
+	.svc-card__items {
+		margin-top: 0.5rem;
+		padding-left: 1.2rem;
+		list-style: disc;
+		line-height: 1.75;
+		color: var(--color-text-secondary);
+		margin-bottom: 1.25rem;
+	}
+	.svc-card__items li + li {
+		margin-top: 0.25rem;
+	}
+	.svc-card__note {
+		margin-top: auto;
+		padding-top: 1rem;
+		border-top: 1px solid var(--color-border);
+		font-size: var(--font-size-sm);
+		line-height: 1.7;
+		color: var(--color-text-secondary);
+	}
+	.svc-compare {
+		margin-top: 1.5rem;
+		line-height: 1.8;
+		color: var(--color-text-secondary);
+	}
+
+	/* 共通の相談エリア */
+	.svc-contact {
+		display: grid;
+		gap: clamp(2rem, 1.5rem + 2vw, 3rem);
+	}
+	.svc-contact__title {
+		margin-top: 0.5rem;
+		font-size: clamp(1.5rem, 1.25rem + 1vw, 2rem);
+		line-height: 1.35;
+	}
+	.svc-contact__text {
+		margin-top: 0.75rem;
+		line-height: 1.85;
+		color: var(--color-text-secondary);
+	}
+	.svc-person {
+		margin-top: 1.5rem;
+		padding: 1rem 1.25rem;
+		border-left: 3px solid var(--color-brand);
+		border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+		background: var(--color-surface);
+	}
+	.svc-person__label {
+		font-size: var(--font-size-sm);
+		color: var(--color-muted);
+	}
+	.svc-person__name {
+		margin-top: 0.25rem;
+		font-size: var(--font-size-lg);
+		font-weight: 700;
+	}
+	.svc-person__role {
+		color: var(--color-text-secondary);
+	}
+	.svc-person__link {
+		display: inline-flex;
+		align-items: center;
+		min-height: 2.75rem;
+		font-size: var(--font-size-sm);
+		color: var(--color-brand);
+	}
+	.svc-flow__title {
+		font-size: var(--font-size-lg);
+	}
+	.svc-flow {
+		list-style: none;
+		margin-top: 1rem;
+		display: grid;
+		gap: 0.75rem;
+	}
+	.svc-flow__step {
+		display: grid;
+		grid-template-columns: 2rem minmax(0, 1fr);
+		gap: 0.75rem;
+		align-items: start;
+	}
+	.svc-flow__no {
+		display: grid;
+		place-items: center;
+		width: 2rem;
+		height: 2rem;
+		border-radius: var(--radius-full);
+		background: var(--color-brand);
+		color: var(--color-on-brand);
+		font-size: var(--font-size-sm);
+		font-weight: 600;
+	}
+	.svc-flow__name {
+		font-weight: 600;
+		line-height: 2rem;
+	}
+	.svc-flow__text {
+		line-height: 1.75;
+		color: var(--color-text-secondary);
+	}
+	.svc-contact__card {
+		margin-top: 1.75rem;
+		padding: clamp(1.25rem, 1rem + 2vw, 2rem);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-xl);
+		background: var(--color-surface);
+	}
+	.svc-contact__more {
+		margin-top: 1rem;
+		font-size: var(--font-size-sm);
+		line-height: 1.8;
+		color: var(--color-text-secondary);
+	}
+	@media (min-width: 960px) {
+		.svc-contact {
+			grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+			align-items: start;
+		}
+		.svc-contact__intro {
+			position: sticky;
+			top: calc(var(--header-height, 64px) + 2rem);
+		}
+	}
+
+	/* 事例 */
+	.svc-case {
+		max-width: 46rem;
+		line-height: 1.85;
+	}
+	.svc-case__title {
+		margin-bottom: 0.5rem;
+		font-size: var(--font-size-xl);
+	}
+	.svc-case p + p {
+		margin-top: 0.5rem;
+	}
+</style>

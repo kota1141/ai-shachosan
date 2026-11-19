@@ -202,39 +202,6 @@ const hasHeadings = (post.data.content ?? []).some(
 
 		<div class="band section">
 			<div class="frame post-layout">
-				<div class="post-meta">
-					<dl class="post-facts">
-						{
-							bylines.length > 0 && (
-								<div class="post-fact">
-									<dt class="eyebrow">
-										{bylines.length === 1 ? "執筆" : "執筆"}
-									</dt>
-									<dd>
-										<Byline bylines={bylines} layout="list" />
-									</dd>
-								</div>
-							)
-						}
-						{
-							publishedAt && (
-								<div class="post-fact">
-									<dt class="eyebrow">掲載日</dt>
-									<dd>
-										<time datetime={publishedAt.toISOString()}>
-											{publishDate}
-										</time>
-									</dd>
-								</div>
-							)
-						}
-						<div class="post-fact">
-							<dt class="eyebrow">目安</dt>
-							<dd>{readingTime}分</dd>
-						</div>
-					</dl>
-				</div>
-
 				<div class="post-main">
 					<div class="prose" data-post-content>
 						<PortableText value={post.data.content} />
@@ -375,9 +342,19 @@ const hasHeadings = (post.data.content ?? []).some(
 			clamp(2.5rem, 1.75rem + 2.5vw, 3.5rem);
 	}
 
+	.post {
+		--rail-width: 13rem;
+		--rail-gap: clamp(2.5rem, 1rem + 3vw, 4rem);
+		--reading-wide: calc(var(--content-width) + var(--rail-gap) + var(--rail-width));
+	}
+
 	.post-header__inner {
 		max-width: var(--content-width);
 		margin-inline: auto;
+	}
+
+	.post-header__title {
+		max-width: 26ch;
 	}
 
 	.back-link {
@@ -402,7 +379,7 @@ const hasHeadings = (post.data.content ?? []).some(
 		border-left: 3px solid var(--color-brand);
 		background: var(--color-surface);
 		border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
-		max-width: 46rem;
+		max-width: var(--content-width);
 	}
 
 	.post-header__summary-label {
@@ -446,10 +423,10 @@ const hasHeadings = (post.data.content ?? []).some(
 		flex-wrap: wrap;
 		align-items: center;
 		gap: var(--spacing-3) var(--spacing-5);
-		margin-block-start: var(--spacing-8);
+		margin-block-start: var(--spacing-6);
 	}
 
-	/* The meta rail is hidden at these widths, so names wrap instead of truncating */
+	/* Names wrap instead of truncating */
 	.post-header__meta :global(.byline__names) {
 		overflow: visible;
 		white-space: normal;
@@ -507,7 +484,6 @@ const hasHeadings = (post.data.content ?? []).some(
 		row-gap: var(--spacing-16);
 	}
 
-	.post-meta,
 	.toc {
 		display: none;
 	}
@@ -521,22 +497,6 @@ const hasHeadings = (post.data.content ?? []).some(
 
 	.post-rail {
 		overflow-wrap: anywhere;
-	}
-
-	/* Meta rail */
-	.post-facts {
-		display: grid;
-		gap: var(--spacing-8);
-	}
-
-	.post-fact dt {
-		margin-block-end: var(--spacing-3);
-	}
-
-	.post-fact dd {
-		font-size: var(--font-size-sm);
-		color: var(--color-text);
-		font-variant-numeric: tabular-nums;
 	}
 
 	/* Table of contents */
@@ -578,46 +538,46 @@ const hasHeadings = (post.data.content ?? []).some(
 	}
 
 	@media (min-width: 1100px) {
+		/* 本文＋右の目次で1つの幅を作り、タイトル・要約・本文の左端をそろえる */
 		.post-header__inner {
-			max-width: none;
+			max-width: var(--reading-wide);
+			margin-inline: auto;
 		}
 
-		.post-header__meta {
-			display: none;
+		/* .post-layout は .frame 自身なので、内側の余白分を足して幅をそろえる */
+		.post-layout {
+			max-width: calc(var(--reading-wide) + 2 * var(--frame-padding));
+			margin-inline: auto;
+		}
+
+		.post-header__title {
+			max-width: none;
 		}
 
 		.post-layout {
 			grid-template-columns:
-				minmax(9rem, var(--meta-col-width))
-				minmax(36rem, var(--content-width))
-				minmax(10rem, var(--gutter-width));
+				minmax(0, var(--content-width))
+				var(--rail-width);
 			align-items: start;
 			justify-content: space-between;
-			gap: var(--spacing-10) clamp(1.5rem, 1rem + 1.5vw, 2.25rem);
-		}
-
-		.post-meta,
-		.post-rail {
-			position: sticky;
-			top: calc(var(--nav-height) + var(--spacing-8));
-		}
-
-		.post-meta {
-			display: block;
+			gap: var(--spacing-10) var(--rail-gap);
 		}
 
 		.post-main {
 			max-width: none;
+			margin-inline: 0;
 		}
 
 		/* A rail taller than the viewport scrolls on its own, so every widget stays reachable */
 		.post-rail {
+			position: sticky;
+			top: calc(var(--header-height, var(--nav-height)) + var(--spacing-8));
 			display: grid;
 			grid-template-columns: minmax(0, 1fr);
 			gap: var(--spacing-10);
 			max-width: none;
-			max-height: calc(100vh - var(--nav-height) - var(--spacing-16));
-			max-height: calc(100dvh - var(--nav-height) - var(--spacing-16));
+			max-height: calc(100vh - var(--header-height, var(--nav-height)) - var(--spacing-16));
+			max-height: calc(100dvh - var(--header-height, var(--nav-height)) - var(--spacing-16));
 			margin: calc(-1 * var(--spacing-1));
 			padding: var(--spacing-1);
 			overflow-y: auto;

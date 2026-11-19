@@ -1,6 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
-import { CONTACT_EMAIL, CONTACT_MAILTO, OPERATOR } from "../utils/site-info";
+import ContactActions from "../components/ContactActions.astro";
 ---
 
 <Base title="メールで相談する" description="薬局のMEOについて、メールで相談できます。まだ相談内容がまとまっていなくても大丈夫です。">
@@ -15,21 +15,7 @@ import { CONTACT_EMAIL, CONTACT_MAILTO, OPERATOR } from "../utils/site-info";
 	<section class="band section">
 		<div class="frame contact">
 			<div class="contact__card">
-				<a class="btn contact__primary" href={CONTACT_MAILTO}>メールを作成する</a>
-
-				<p class="contact__label">送り先のメールアドレス</p>
-				<div class="contact__address">
-					<span class="contact__email" id="contact-email">{CONTACT_EMAIL}</span>
-					<button type="button" class="btn btn--ghost contact__copy" data-copy={CONTACT_EMAIL} aria-describedby="copy-status">
-						メールアドレスをコピー
-					</button>
-				</div>
-				<p class="contact__status" id="copy-status" role="status" aria-live="polite"></p>
-
-				<p class="contact__note">
-					ボタンを押すと、お使いのメールアプリなどの作成画面が開きます。この操作だけではメールは送信されません。開かない場合は、アドレスをコピーして普段お使いのメールからお送りください。
-				</p>
-				<p class="contact__note">担当：{OPERATOR.display}</p>
+				<ContactActions />
 			</div>
 
 			<div class="contact__privacy">
@@ -55,37 +41,6 @@ import { CONTACT_EMAIL, CONTACT_MAILTO, OPERATOR } from "../utils/site-info";
 	</section>
 </Base>
 
-<script>
-	const status = document.getElementById("copy-status");
-	const emailEl = document.getElementById("contact-email");
-
-	function selectAddress() {
-		if (!emailEl) return;
-		const range = document.createRange();
-		range.selectNodeContents(emailEl);
-		const sel = window.getSelection();
-		sel?.removeAllRanges();
-		sel?.addRange(range);
-	}
-
-	document.querySelectorAll<HTMLButtonElement>("[data-copy]").forEach((button) => {
-		button.addEventListener("click", async () => {
-			const text = button.dataset.copy ?? "";
-			try {
-				await navigator.clipboard.writeText(text);
-				if (status) status.textContent = "コピーしました";
-			} catch {
-				// Clipboard can be blocked (permissions, non-secure context).
-				// Leave the address selected so it can be copied by hand.
-				selectAddress();
-				if (status)
-					status.textContent =
-						"自動でコピーできませんでした。選択されたアドレスを長押し、または右クリックしてコピーしてください。";
-			}
-		});
-	});
-</script>
-
 <style>
 	.contact {
 		max-width: 44rem;
@@ -97,43 +52,6 @@ import { CONTACT_EMAIL, CONTACT_MAILTO, OPERATOR } from "../utils/site-info";
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-xl);
 		padding: clamp(1.25rem, 1rem + 2vw, 2rem);
-		display: grid;
-		gap: .75rem;
-	}
-	.contact__primary {
-		justify-self: start;
-		min-height: 3rem;
-		padding-inline: 1.75rem;
-		font-size: 1.0625rem;
-	}
-	.contact__label {
-		margin-top: .75rem;
-		font-size: var(--font-size-sm);
-		color: var(--color-muted);
-	}
-	.contact__address {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: .75rem;
-	}
-	.contact__email {
-		font-size: 1.125rem;
-		font-weight: 600;
-		user-select: all;
-		overflow-wrap: anywhere;
-	}
-	.contact__copy {
-		min-height: 2.75rem;
-	}
-	.contact__status {
-		min-height: 1.5em;
-		color: var(--color-brand);
-		font-weight: 600;
-	}
-	.contact__note {
-		line-height: 1.8;
-		color: var(--color-text-secondary);
 	}
 	.contact__privacy p,
 	.contact__self {

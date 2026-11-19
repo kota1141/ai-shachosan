@@ -29,7 +29,7 @@
 
 		max-width: var(--content-width);
 		font-size: var(--font-size-lg);
-		line-height: 1.75;
+		line-height: 1.85;
 		color: var(--prose-color);
 		overflow-wrap: break-word;
 	}
@@ -195,7 +195,7 @@
 	@media (max-width: 640px) {
 		.prose {
 			font-size: 1.0625rem;
-			line-height: 1.7;
+			line-height: 1.85;
 		}
 	}
 }

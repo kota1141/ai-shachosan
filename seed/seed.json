@@ -191,7 +191,7 @@
         },
         {
           "type": "custom",
-          "label": "相談内容を整理",
+          "label": "メールで相談",
           "url": "/contact"
         }
       ]

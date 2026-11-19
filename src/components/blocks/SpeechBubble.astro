@@ -35,7 +35,7 @@ const portrait = getCharacterPortrait(character.id, Astro.props.expression ?? va
   .speech__label a { color: inherit; text-underline-offset: .2em; }
   .speech__sep { color: var(--color-muted); font-weight: 400; }
   .speech__label small { font-size: .75rem; font-weight: 400; color: var(--color-muted); }
-  /* 青葉まこと（answer）は淡いブランド色で、三浦けんじ（薬局長）と見分けやすくする */
+  /* 青葉まこと（answer）は淡いブランド色で、薬局長と見分けやすくする */
   .speech--answer .speech__body { background: color-mix(in srgb, var(--color-brand) 6%, var(--color-surface)); border-color: color-mix(in srgb, var(--color-brand) 28%, var(--color-border)); }
   .speech--answer .speech__label a { color: var(--color-brand); }
   @media (max-width: 600px) {

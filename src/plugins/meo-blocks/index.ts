@@ -4,7 +4,7 @@ export function createPlugin() {
     id: 'pharmacy-meo-blocks', version: '1.0.0',
     admin: { portableTextBlocks: [
       { type: 'meo_speech', label: 'MEOの会話', icon: 'code', fields: [
-        { type: 'select', action_id: 'speaker', label: '話し手', options: [{label:'薬局長（質問）',value:'question'},{label:'青葉まこと｜薬剤師マーケター（解説）',value:'answer'}] },
+        { type: 'select', action_id: 'speaker', label: '話し手', options: [{label:'薬局長｜MEOを勉強中（質問）',value:'question'},{label:'青葉まこと｜薬剤師マーケター（解説）',value:'answer'}] },
         { type: 'select', action_id: 'expression', label: '表情（任意・人物に合わない場合は通常）', options: [{label:'通常',value:'neutral'},{label:'質問（薬局長）',value:'question'},{label:'納得（薬局長）',value:'agree'},{label:'解説（青葉）',value:'explain'},{label:'考える（青葉）',value:'think'}] },
         { type: 'text_input', action_id: 'text', label: 'せりふ', multiline: true },
       ] },
@@ -15,6 +15,10 @@ export function createPlugin() {
       { type: 'meo_table', label: '比較表', icon: 'code', fields: [
         { type: 'text_input', action_id: 'headersText', label: '見出し（ | で区切る）' },
         { type: 'text_input', action_id: 'rowsText', label: '1行ずつ入力、列は | で区切る', multiline: true },
+      ] },
+      { type: 'meo_template', label: 'コピーできる文例', icon: 'code', fields: [
+        { type: 'text_input', action_id: 'title', label: '見出し（例：投稿例、掲示文の例）' },
+        { type: 'text_input', action_id: 'text', label: '文面（［ ］で囲んだ部分は書き換え欄として表示）', multiline: true },
       ] },
     ] },
   });

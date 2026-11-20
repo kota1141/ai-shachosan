@@ -63,6 +63,8 @@
 	.prose :is(h1, h2, h3, h4, h5, h6) {
 		color: var(--color-text);
 		line-height: var(--leading-snug);
+		/* 日本語の見出しを語の途中で折り返さない（対応ブラウザのみ。未対応では従来どおり） */
+		word-break: auto-phrase;
 	}
 
 	.prose h1 {

@@ -1,0 +1,124 @@
+---
+/**
+ * コピーして使える文面（GBP投稿例・掲示文・返信例など）。
+ * ［ ］で囲んだ部分は、各薬局の情報に書き換える欄として色を付ける。
+ */
+interface TemplateValue {
+	title?: unknown;
+	text?: unknown;
+}
+interface Props extends TemplateValue {
+	node?: TemplateValue;
+}
+const value = Astro.props.node ?? Astro.props;
+const title = String(value.title ?? "").trim() || "文例";
+const text = String(value.text ?? "");
+const hasSlots = /［[^］]*］/.test(text);
+// ［…］ を強調表示用に分割する
+const parts = text.split(/(［[^］]*］)/g).filter((p) => p !== "");
+---
+
+<figure class="tpl" data-template>
+	<figcaption class="tpl__head">
+		<span class="tpl__title">{title}</span>
+		<button type="button" class="tpl__copy" data-template-copy>文面をコピー</button>
+	</figcaption>
+	{hasSlots && <p class="tpl__hint"><span class="tpl__slot">［ ］</span>は、薬局の実際の情報に書き換える欄です。</p>}
+	<div class="tpl__body" data-template-text>{parts.map((p) => (/^［[^］]*］$/.test(p) ? <span class="tpl__slot">{p}</span> : p))}</div>
+	<p class="tpl__status" role="status" aria-live="polite"></p>
+</figure>
+
+<script>
+	document.querySelectorAll<HTMLElement>("[data-template]").forEach((box) => {
+		const button = box.querySelector<HTMLButtonElement>("[data-template-copy]");
+		const body = box.querySelector<HTMLElement>("[data-template-text]");
+		const status = box.querySelector<HTMLElement>(".tpl__status");
+		if (!button || !body || !status) return;
+		button.addEventListener("click", async () => {
+			try {
+				await navigator.clipboard.writeText(body.innerText.trim());
+				status.textContent = "コピーしました。［ ］の部分を書き換えてお使いください。";
+			} catch {
+				// クリップボードが使えないときは、文面を選択して手動でコピーできるようにする
+				const range = document.createRange();
+				range.selectNodeContents(body);
+				const sel = window.getSelection();
+				sel?.removeAllRanges();
+				sel?.addRange(range);
+				status.textContent = "自動でコピーできませんでした。選択された文面を長押し、または右クリックしてコピーしてください。";
+			}
+		});
+	});
+</script>
+
+<style>
+	.tpl {
+		margin: 1.5rem 0;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-lg);
+		background: var(--color-surface);
+		overflow: hidden;
+	}
+	.tpl__head {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem 1rem;
+		padding: 0.625rem 0.75rem 0.625rem 1rem;
+		border-bottom: 1px solid var(--color-border);
+		background: var(--color-fill);
+	}
+	.tpl__title {
+		font-size: 0.875rem;
+		font-weight: 700;
+	}
+	.tpl__copy {
+		min-height: 2.5rem;
+		padding: 0 1rem;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-full);
+		background: var(--color-surface);
+		color: var(--color-text);
+		font: inherit;
+		font-size: 0.8125rem;
+		font-weight: 600;
+		cursor: pointer;
+	}
+	.tpl__copy:hover {
+		border-color: var(--color-brand);
+		color: var(--color-brand);
+	}
+	.tpl__copy:focus-visible {
+		outline: 2px solid var(--color-brand);
+		outline-offset: 2px;
+	}
+	.tpl .tpl__hint {
+		margin: 0;
+		padding: 0.75rem 1rem 0;
+		font-size: 0.8125rem;
+		line-height: 1.7;
+		color: var(--color-text-secondary);
+	}
+	.tpl__body {
+		padding: 0.75rem 1rem 0.25rem;
+		white-space: pre-line;
+		line-height: 1.9;
+		overflow-wrap: anywhere;
+	}
+	.tpl__slot {
+		padding: 0 0.15em;
+		border-radius: 0.25em;
+		background: color-mix(in srgb, var(--color-brand) 12%, transparent);
+		color: var(--color-brand);
+		font-weight: 600;
+	}
+	.tpl .tpl__status {
+		margin: 0;
+		min-height: 1.25rem;
+		padding: 0 1rem 0.625rem;
+		font-size: 0.8125rem;
+		color: var(--color-brand);
+		font-weight: 600;
+	}
+</style>

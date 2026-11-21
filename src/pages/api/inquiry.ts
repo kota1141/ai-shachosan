@@ -32,6 +32,30 @@ async function hashIp(ip: string, salt: string): Promise<string> {
 	return [...new Uint8Array(sig).slice(0, 12)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+async function readLimited(request: Request, maxBytes: number): Promise<string | null> {
+	if (!request.body) return "";
+	const reader = request.body.getReader();
+	const chunks: Uint8Array[] = [];
+	let total = 0;
+	for (;;) {
+		const { done, value } = await reader.read();
+		if (done) break;
+		total += value.byteLength;
+		if (total > maxBytes) {
+			await reader.cancel();
+			return null;
+		}
+		chunks.push(value);
+	}
+	const all = new Uint8Array(total);
+	let offset = 0;
+	for (const c of chunks) {
+		all.set(c, offset);
+		offset += c.byteLength;
+	}
+	return new TextDecoder().decode(all);
+}
+
 export const POST: APIRoute = async ({ request, url }) => {
 	const env = rawEnv as unknown as InquiryEnv;
 	const config = readInquiryConfig(env, import.meta.env.DEV);
@@ -48,13 +72,15 @@ export const POST: APIRoute = async ({ request, url }) => {
 	// リクエスト全体の上限
 	const declared = Number(request.headers.get("content-length") ?? "0");
 	if (declared > LIMITS.requestBytes) return json(413, { ok: false, error: "too_large" });
+	// 申告がない・偽りの場合も、上限を超えた時点で読み込みをやめる
 	let text: string;
 	try {
-		text = await request.text();
+		const read = await readLimited(request, LIMITS.requestBytes);
+		if (read === null) return json(413, { ok: false, error: "too_large" });
+		text = read;
 	} catch {
 		return json(400, { ok: false, error: "bad_request" });
 	}
-	if (new TextEncoder().encode(text).length > LIMITS.requestBytes) return json(413, { ok: false, error: "too_large" });
 
 	let payload: unknown;
 	try {
@@ -79,15 +105,13 @@ export const POST: APIRoute = async ({ request, url }) => {
 			return json(200, { ok: true, duplicate: true, inquiry_type: existing.inquiry_type });
 		}
 
-		// 回数制限：送信元（IPのハッシュ）ごと、サイト全体（1時間・1日）
+		// 回数制限①：送信元（IPのハッシュ）ごと。Turnstile検証APIへの過剰な問い合わせも防ぐ
 		const ip = request.headers.get("cf-connecting-ip") ?? (config.devMock ? "127.0.0.1" : "");
 		const salt = env.INQUIRY_HASH_SALT || env.TURNSTILE_SECRET_KEY || "dev-only";
 		const ipKey = ip ? await hashIp(ip, salt) : "noip";
-		const allowed =
-			(await hitRateLimit(db, `ip:${ipKey}`, 3600, config.limits.perIpHour)) &&
-			(await hitRateLimit(db, "global:h", 3600, config.limits.globalHour)) &&
-			(await hitRateLimit(db, "global:d", 86_400, config.limits.globalDay));
-		if (!allowed) return json(429, { ok: false, error: "rate_limited" }, { "retry-after": "3600" });
+		if (!(await hitRateLimit(db, `ip:${ipKey}`, 3600, config.limits.perIpHour))) {
+			return json(429, { ok: false, error: "rate_limited" }, { "retry-after": "3600" });
+		}
 
 		const ts = await verifyTurnstile({
 			token: v.turnstileToken,
@@ -100,6 +124,13 @@ export const POST: APIRoute = async ({ request, url }) => {
 			const status = ts.code === "turnstile_unavailable" ? 503 : 403;
 			return json(status, { ok: false, error: ts.code });
 		}
+
+		// 回数制限②：サイト全体（1時間・1日）。Turnstileを通過した送信だけを数え、
+		// でたらめな送信で全体の上限を使い切られないようにする
+		const globalOk =
+			(await hitRateLimit(db, "global:h", 3600, config.limits.globalHour)) &&
+			(await hitRateLimit(db, "global:d", 86_400, config.limits.globalDay));
+		if (!globalOk) return json(429, { ok: false, error: "rate_limited" }, { "retry-after": "3600" });
 
 		// 対象記事は公開記事と照合できたものだけを残す
 		let articleTitle: string | null = null;

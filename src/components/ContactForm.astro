@@ -1,0 +1,725 @@
+---
+/**
+ * 質問・相談フォーム（/contact）。
+ * 送信は /api/inquiry へ。成功表示とGA4の成功イベントは、サーバーの受付成功の応答を受け取った後だけ。
+ */
+import { FORM_ID, LIMITS, type InquiryType, type Placement } from "../config/inquiry";
+
+interface Props {
+	initialType: InquiryType | null;
+	placement: Placement;
+	article: { slug: string; title: string; url: string } | null;
+	turnstileSiteKey: string;
+	mock: boolean;
+}
+const { initialType, placement, article, turnstileSiteKey, mock } = Astro.props;
+---
+
+<div
+	class="cf"
+	id="contact-form-root"
+	data-placement={placement}
+	data-article={article?.slug ?? ""}
+	data-sitekey={turnstileSiteKey}
+	data-mock={mock ? "1" : "0"}
+	data-form-id={FORM_ID}
+>
+	<form class="cf__form" id="contact-form" novalidate>
+		<div class="cf__summary" id="cf-summary" tabindex="-1" hidden>
+			<p class="cf__summary-title">入力内容を確認してください</p>
+			<ul></ul>
+		</div>
+
+		{article && (
+			<div class="cf__article">
+				<p class="cf__article-label">対象の記事</p>
+				<p class="cf__article-title">{article.title}</p>
+				<p class="cf__article-url">{article.url}</p>
+			</div>
+		)}
+
+		<fieldset class="cf__field" id="field-type" aria-describedby="err-type">
+			<legend class="cf__label">用件 <span class="cf__req">必須</span></legend>
+			<div class="cf__choices">
+				<label class="cf__choice">
+					<input type="radio" name="type" value="question" checked={initialType === "question"} />
+					<span>
+						<strong>記事への質問・記事リクエスト</strong>
+						<small>分かりにくかったところ、取り上げてほしいテーマなど</small>
+					</span>
+				</label>
+				<label class="cf__choice">
+					<input type="radio" name="type" value="consultation" checked={initialType === "consultation"} />
+					<span>
+						<strong>自分の薬局のMEO・ホームページについて相談</strong>
+						<small>個別に返信します</small>
+					</span>
+				</label>
+			</div>
+			<p class="cf__error" id="err-type" hidden></p>
+		</fieldset>
+
+		<div class="cf__field">
+			<label class="cf__label" for="cf-body">
+				<span data-label-body>質問・相談の内容</span> <span class="cf__req">必須</span>
+			</label>
+			<p class="cf__hint" id="hint-body">患者さんの氏名、処方内容、病歴、ログイン情報（IDやパスワード）は書かないでください。</p>
+			<textarea id="cf-body" name="body" rows="8" aria-describedby="hint-body count-body err-body" required></textarea>
+			<p class="cf__count" id="count-body" aria-live="off"><span data-count>0</span> / {LIMITS.body}文字</p>
+			<p class="cf__error" id="err-body" hidden></p>
+		</div>
+
+		<div class="cf__field" data-reply-choice hidden>
+			<label class="cf__check">
+				<input type="checkbox" name="wants_reply" id="cf-wants-reply" />
+				<span>個別の返信を希望する</span>
+			</label>
+			<p class="cf__hint">希望しない場合、メールアドレスは不要です。いただいた質問は今後の記事づくりの参考にします。</p>
+		</div>
+
+		<div class="cf__field" data-email-field hidden>
+			<label class="cf__label" for="cf-email">返信先のメールアドレス <span class="cf__req">必須</span></label>
+			<input id="cf-email" name="email" type="email" inputmode="email" autocomplete="email" aria-describedby="err-email" />
+			<p class="cf__error" id="err-email" hidden></p>
+		</div>
+
+		<details class="cf__extra">
+			<summary>補足情報（任意）</summary>
+			<div class="cf__field">
+				<label class="cf__label" for="cf-name">お名前 <span class="cf__opt">任意</span></label>
+				<input id="cf-name" name="name" type="text" autocomplete="name" aria-describedby="err-name" />
+				<p class="cf__error" id="err-name" hidden></p>
+			</div>
+			<div class="cf__field">
+				<label class="cf__label" for="cf-pharmacy">薬局名 <span class="cf__opt">任意</span></label>
+				<input id="cf-pharmacy" name="pharmacy" type="text" autocomplete="organization" aria-describedby="err-pharmacy" />
+				<p class="cf__error" id="err-pharmacy" hidden></p>
+			</div>
+			<div class="cf__field">
+				<label class="cf__label" for="cf-url">ホームページのURL <span class="cf__opt">任意</span></label>
+				<input id="cf-url" name="url" type="url" inputmode="url" placeholder="https://" aria-describedby="err-url" />
+				<p class="cf__error" id="err-url" hidden></p>
+			</div>
+		</details>
+
+		<ul class="cf__notes">
+			<li>送信内容はそのまま公開されません。運営者が確認します。</li>
+			<li>個別の返信は、希望した場合に入力されたメールアドレスへお送りします。すべてのご質問への回答や、返信の時期はお約束できません。</li>
+			<li>個別の相談を事例として紹介する場合は、掲載する内容を事前にご本人に確認します。</li>
+			<li>入力した情報の扱いは<a href="/privacy/">プライバシーポリシー</a>をご確認ください。</li>
+		</ul>
+
+		<div class="cf__field">
+			<div class="cf__turnstile" id="cf-turnstile"></div>
+			<p class="cf__error" id="err-turnstile" hidden></p>
+		</div>
+
+		<div class="cf__submit-row">
+			<button type="submit" class="btn cf__submit" id="cf-submit">送信する</button>
+		</div>
+		<p class="cf__status" id="cf-status" role="status" aria-live="polite"></p>
+	</form>
+
+	<div class="cf__done" id="cf-done" hidden>
+		<h2 class="cf__done-title" tabindex="-1">受け付けました</h2>
+		<p data-done-text></p>
+		<p class="cf__hint">送信した内容の控えは、このページには残りません。</p>
+		<button type="button" class="btn btn--ghost" id="cf-again">別の質問・相談を送る</button>
+	</div>
+</div>
+
+<noscript>
+	<p class="cf__noscript">フォームの送信にはJavaScriptが必要です。下のメールアドレスからご連絡ください。</p>
+</noscript>
+
+<script>
+	import { LIMITS, type InquiryType } from "../config/inquiry";
+	import { track } from "../lib/analytics-client";
+
+	const root = document.getElementById("contact-form-root");
+	const form = document.getElementById("contact-form") as HTMLFormElement | null;
+	if (root && form) setup(root, form);
+
+	type ErrCode =
+		| "type_required" | "body_required" | "body_too_long" | "email_required" | "email_invalid"
+		| "name_too_long" | "pharmacy_too_long" | "url_invalid" | "url_too_long";
+
+	const MESSAGES: Record<ErrCode, string> = {
+		type_required: "用件を選んでください。",
+		body_required: "内容を入力してください。",
+		body_too_long: `内容は${LIMITS.body}文字以内で入力してください。`,
+		email_required: "返信先のメールアドレスを入力してください。",
+		email_invalid: "メールアドレスの形式を確認してください（例：name@example.com）。",
+		name_too_long: `お名前は${LIMITS.name}文字以内で入力してください。`,
+		pharmacy_too_long: `薬局名は${LIMITS.pharmacy}文字以内で入力してください。`,
+		url_invalid: "URLは http:// または https:// から始まる形で入力してください。",
+		url_too_long: "URLが長すぎます。",
+	};
+	const FIELD_LABEL: Record<string, string> = {
+		type: "用件", body: "内容", email: "メールアドレス", name: "お名前", pharmacy: "薬局名", url: "ホームページのURL",
+	};
+	const FIELD_TARGET: Record<string, string> = {
+		type: "input[name=type]", body: "#cf-body", email: "#cf-email", name: "#cf-name", pharmacy: "#cf-pharmacy", url: "#cf-url",
+	};
+
+	const len = (s: string) => [...s].length;
+	const EMAIL_RE = /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/;
+
+	declare global {
+		interface Window {
+			turnstile?: {
+				render: (el: HTMLElement, opts: Record<string, unknown>) => string;
+				reset: (id?: string) => void;
+			};
+		}
+	}
+
+	function setup(root: HTMLElement, form: HTMLFormElement) {
+		const placement = root.dataset.placement || "direct";
+		const article = root.dataset.article || "";
+		const mock = root.dataset.mock === "1";
+		const siteKey = root.dataset.sitekey || "";
+
+		const $ = <T extends Element>(sel: string) => form.querySelector<T>(sel)!;
+		const body = $<HTMLTextAreaElement>("#cf-body");
+		const email = $<HTMLInputElement>("#cf-email");
+		const wantsReply = $<HTMLInputElement>("#cf-wants-reply");
+		const replyChoice = $<HTMLElement>("[data-reply-choice]");
+		const emailField = $<HTMLElement>("[data-email-field]");
+		const submit = $<HTMLButtonElement>("#cf-submit");
+		const status = $<HTMLElement>("#cf-status");
+		const summary = $<HTMLElement>("#cf-summary");
+		const countEl = $<HTMLElement>("[data-count]");
+		const done = document.getElementById("cf-done")!;
+		const bodyLabel = $<HTMLElement>("[data-label-body]");
+
+		let submissionKey = crypto.randomUUID();
+		let token = "";
+		let widgetId: string | undefined;
+		let sending = false;
+		let lastFailed = false;
+		const started = new Set<string>();
+		const counted = new Set<string>();
+
+		const currentType = (): InquiryType | null => {
+			const r = form.querySelector<HTMLInputElement>("input[name=type]:checked");
+			return r?.value === "question" || r?.value === "consultation" ? r.value : null;
+		};
+		const needsEmail = () => currentType() === "consultation" || (currentType() === "question" && wantsReply.checked);
+
+		function syncUi() {
+			const t = currentType();
+			replyChoice.hidden = t !== "question";
+			emailField.hidden = !needsEmail();
+			submit.textContent = t === "consultation" ? "相談を送る" : t === "question" ? "質問を送る" : "送信する";
+			bodyLabel.textContent = t === "consultation" ? "相談の内容" : t === "question" ? "質問・リクエストの内容" : "質問・相談の内容";
+		}
+
+		// ---- 入力開始（自動入力や表示だけでは数えない）----
+		function markStart(e: Event) {
+			if (!e.isTrusted) return;
+			const t = currentType();
+			const key = t ?? "unknown";
+			if (started.has(key)) return;
+			started.add(key);
+			track("contact_form_start", {
+				form_id: "contact_main",
+				placement,
+				source_article: article || "none",
+				...(t ? { inquiry_type: t } : {}),
+			});
+		}
+		form.addEventListener("change", (e) => {
+			if ((e.target as HTMLInputElement).name === "type") {
+				syncUi();
+				markStart(e);
+			}
+		});
+		form.addEventListener("input", (e) => {
+			const target = e.target as HTMLInputElement;
+			if (target.name !== "type" && target.type !== "checkbox") markStart(e);
+			if ((target as Element) === body) countEl.textContent = String(len(body.value));
+			if (lastFailed) {
+				// 失敗後に内容を変えたら、別の送信として扱う
+				submissionKey = crypto.randomUUID();
+				lastFailed = false;
+			}
+		});
+		wantsReply.addEventListener("change", syncUi);
+
+		// ---- Turnstile ----
+		const tsBox = $<HTMLElement>("#cf-turnstile");
+		function renderTurnstile() {
+			if (mock) {
+				tsBox.innerHTML = "";
+				const label = document.createElement("label");
+				label.className = "cf__check cf__mock";
+				const cb = document.createElement("input");
+				cb.type = "checkbox";
+				cb.addEventListener("change", () => (token = cb.checked ? "mock-pass" : ""));
+				label.appendChild(cb);
+				label.appendChild(document.createTextNode("（開発用モック）迷惑送信対策の確認を通す"));
+				tsBox.appendChild(label);
+				return;
+			}
+			if (!siteKey) return;
+			const draw = () => {
+				widgetId = window.turnstile!.render(tsBox, {
+					sitekey: siteKey,
+					action: "contact",
+					language: "ja",
+					callback: (t: string) => (token = t),
+					"expired-callback": () => (token = ""),
+					"error-callback": () => {
+						token = "";
+						showFieldError("turnstile", "迷惑送信対策の確認を読み込めませんでした。ページを再読み込みしてください。");
+					},
+				});
+			};
+			if (window.turnstile) return draw();
+			const s = document.createElement("script");
+			s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+			s.async = true;
+			s.onload = draw;
+			s.onerror = () => showFieldError("turnstile", "迷惑送信対策の確認を読み込めませんでした。時間をおいて再読み込みするか、メールでご連絡ください。");
+			document.head.appendChild(s);
+		}
+		function resetTurnstile() {
+			token = "";
+			if (mock) {
+				const cb = tsBox.querySelector<HTMLInputElement>("input");
+				if (cb) cb.checked = false;
+			} else window.turnstile?.reset(widgetId);
+		}
+
+		// ---- エラー表示 ----
+		function clearErrors() {
+			summary.hidden = true;
+			summary.querySelector("ul")!.innerHTML = "";
+			form.querySelectorAll<HTMLElement>(".cf__error").forEach((el) => {
+				el.hidden = true;
+				el.textContent = "";
+			});
+			form.querySelectorAll("[aria-invalid]").forEach((el) => el.removeAttribute("aria-invalid"));
+		}
+		function showFieldError(field: string, message: string) {
+			const el = form.querySelector<HTMLElement>(`#err-${field}`);
+			if (el) {
+				el.textContent = message;
+				el.hidden = false;
+			}
+			const target = FIELD_TARGET[field];
+			if (target) form.querySelectorAll(target).forEach((i) => i.setAttribute("aria-invalid", "true"));
+		}
+		function showErrors(errors: Record<string, ErrCode>) {
+			const ul = summary.querySelector("ul")!;
+			for (const [field, code] of Object.entries(errors)) {
+				const msg = MESSAGES[code] ?? "入力内容を確認してください。";
+				showFieldError(field, msg);
+				const li = document.createElement("li");
+				const a = document.createElement("a");
+				a.href = "#";
+				a.textContent = `${FIELD_LABEL[field] ?? field}：${msg}`;
+				a.addEventListener("click", (ev) => {
+					ev.preventDefault();
+					if (field === "name" || field === "pharmacy" || field === "url") form.querySelector("details")!.open = true;
+					form.querySelector<HTMLElement>(FIELD_TARGET[field] ?? "")?.focus();
+				});
+				li.appendChild(a);
+				ul.appendChild(li);
+			}
+			summary.hidden = false;
+			summary.focus();
+		}
+
+		function clientValidate(): Record<string, ErrCode> {
+			const errors: Record<string, ErrCode> = {};
+			if (!currentType()) errors.type = "type_required";
+			const b = body.value.trim();
+			if (!b) errors.body = "body_required";
+			else if (len(b) > LIMITS.body) errors.body = "body_too_long";
+			if (needsEmail()) {
+				const e = email.value.trim();
+				if (!e) errors.email = "email_required";
+				else if (e.length > LIMITS.email || !EMAIL_RE.test(e)) errors.email = "email_invalid";
+			}
+			const n = $<HTMLInputElement>("#cf-name").value.trim();
+			if (n && len(n) > LIMITS.name) errors.name = "name_too_long";
+			const p = $<HTMLInputElement>("#cf-pharmacy").value.trim();
+			if (p && len(p) > LIMITS.pharmacy) errors.pharmacy = "pharmacy_too_long";
+			const u = $<HTMLInputElement>("#cf-url").value.trim();
+			if (u) {
+				if (u.length > LIMITS.url) errors.url = "url_too_long";
+				else {
+					try {
+						const x = new URL(u);
+						if (x.protocol !== "http:" && x.protocol !== "https:") errors.url = "url_invalid";
+					} catch {
+						errors.url = "url_invalid";
+					}
+				}
+			}
+			if (Object.keys(errors).some((k) => ["name", "pharmacy", "url"].includes(k))) form.querySelector("details")!.open = true;
+			return errors;
+		}
+
+		function setSending(on: boolean) {
+			sending = on;
+			submit.disabled = on;
+			form.setAttribute("aria-busy", on ? "true" : "false");
+		}
+
+		form.addEventListener("submit", async (e) => {
+			e.preventDefault();
+			if (sending) return;
+			clearErrors();
+			status.textContent = "";
+			const errors = clientValidate();
+			if (Object.keys(errors).length) return showErrors(errors);
+			if (!token) {
+				showFieldError("turnstile", "送信前に、迷惑送信対策の確認を完了してください。");
+				status.textContent = "迷惑送信対策の確認が完了していません。";
+				return;
+			}
+
+			const type = currentType()!;
+			const reply = type === "consultation" || wantsReply.checked;
+			// 返信を希望しない場合は、メール欄に残った値を送らない
+			const payload = {
+				form_id: "contact_main",
+				submission_key: submissionKey,
+				type,
+				body: body.value,
+				wants_reply: reply,
+				...(reply ? { email: email.value.trim() } : {}),
+				name: $<HTMLInputElement>("#cf-name").value,
+				pharmacy: $<HTMLInputElement>("#cf-pharmacy").value,
+				url: $<HTMLInputElement>("#cf-url").value,
+				source_article: article || null,
+				placement,
+				turnstile_token: token,
+			};
+
+			setSending(true);
+			status.textContent = "送信しています…";
+			let res: Response | null = null;
+			try {
+				res = await fetch("/api/inquiry", {
+					method: "POST",
+					headers: { "content-type": "application/json" },
+					body: JSON.stringify(payload),
+					signal: AbortSignal.timeout(20000),
+				});
+			} catch {
+				res = null;
+			}
+			setSending(false);
+
+			let data: { ok?: boolean; error?: string; fields?: Record<string, ErrCode>; inquiry_type?: string } = {};
+			try {
+				data = res ? await res.json() : {};
+			} catch {
+				data = {};
+			}
+
+			if (res?.ok && data.ok) {
+				onSuccess(data.inquiry_type === "consultation" ? "consultation" : type);
+				return;
+			}
+
+			lastFailed = true;
+			if (!res) {
+				// 通信失敗：サーバーで受け付けたか分からないため、同じ送信IDのまま再試行できるようにする
+				lastFailed = false;
+				status.textContent = "通信に失敗しました。入力内容はそのままです。通信状況を確認して、もう一度「送る」を押してください。";
+				resetTurnstile();
+				return;
+			}
+			resetTurnstile();
+			switch (res.status) {
+				case 422:
+					status.textContent = "入力内容を確認してください。";
+					showErrors(data.fields ?? {});
+					break;
+				case 403:
+					showFieldError("turnstile", "迷惑送信対策の確認を通過できませんでした。もう一度確認してから送ってください。");
+					status.textContent = "迷惑送信対策の確認を通過できませんでした。";
+					break;
+				case 429:
+					status.textContent = "送信が集中しているため、受け付けられませんでした。時間をおいてもう一度送るか、メールでご連絡ください。入力内容はそのままです。";
+					break;
+				case 503:
+					status.textContent = "現在フォームを受け付けられません。入力内容はそのままです。お手数ですが、下のメールアドレスからご連絡ください。";
+					break;
+				default:
+					status.textContent = "送信できませんでした。入力内容はそのままです。時間をおいてもう一度送るか、メールでご連絡ください。";
+			}
+		});
+
+		function onSuccess(type: InquiryType) {
+			// サーバーの受付成功後に1回だけ数える（同じ送信の再試行では数えない）
+			if (!counted.has(submissionKey)) {
+				counted.add(submissionKey);
+				track(type === "consultation" ? "generate_lead" : "question_submit", {
+					form_id: "contact_main",
+					inquiry_type: type,
+					placement,
+					source_article: article || "none",
+				});
+			}
+			const reply = type === "consultation" || wantsReply.checked;
+			done.querySelector("[data-done-text]")!.textContent =
+				type === "consultation"
+					? "ご相談を受け付けました。内容を確認し、入力いただいたメールアドレスへご連絡します。"
+					: reply
+						? "ご質問を受け付けました。内容を確認し、入力いただいたメールアドレスへご連絡します。すべてのご質問への回答や、返信の時期はお約束できません。"
+						: "ご質問を受け付けました。今後の記事づくりの参考にします。";
+			form.hidden = true;
+			done.hidden = false;
+			done.querySelector<HTMLElement>(".cf__done-title")!.focus();
+		}
+
+		document.getElementById("cf-again")!.addEventListener("click", () => {
+			form.reset();
+			countEl.textContent = "0";
+			clearErrors();
+			status.textContent = "";
+			submissionKey = crypto.randomUUID();
+			started.clear();
+			resetTurnstile();
+			syncUi();
+			done.hidden = true;
+			form.hidden = false;
+			body.focus();
+		});
+
+		syncUi();
+		renderTurnstile();
+	}
+</script>
+
+<style>
+	/* display を指定した要素でも hidden 属性を優先する */
+	.cf [hidden],
+	.cf[hidden] {
+		display: none !important;
+	}
+	.cf__form {
+		display: grid;
+		gap: 1.5rem;
+	}
+	.cf__field {
+		display: grid;
+		gap: 0.5rem;
+		border: 0;
+		padding: 0;
+		margin: 0;
+		min-width: 0;
+	}
+	.cf__field[hidden] {
+		display: none;
+	}
+	.cf__label {
+		font-weight: 600;
+		padding: 0;
+	}
+	.cf__req,
+	.cf__opt {
+		display: inline-block;
+		margin-left: 0.35rem;
+		padding: 0.05rem 0.45rem;
+		border-radius: var(--radius-full, 999px);
+		font-size: 0.75rem;
+		font-weight: 600;
+		vertical-align: 0.1em;
+	}
+	.cf__req {
+		background: var(--color-brand);
+		color: var(--color-on-brand);
+	}
+	.cf__opt {
+		border: 1px solid var(--color-border);
+		color: var(--color-text-secondary);
+	}
+	.cf__hint,
+	.cf__count {
+		font-size: var(--font-size-sm);
+		line-height: 1.7;
+		color: var(--color-text-secondary);
+	}
+	.cf__count {
+		justify-self: end;
+	}
+	.cf__choices {
+		display: grid;
+		gap: 0.75rem;
+		margin-top: 0.25rem;
+	}
+	.cf__choice {
+		display: flex;
+		gap: 0.75rem;
+		align-items: flex-start;
+		padding: 0.875rem 1rem;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-lg);
+		cursor: pointer;
+		line-height: 1.6;
+	}
+	.cf__choice:has(input:checked) {
+		border-color: var(--color-brand);
+		box-shadow: 0 0 0 1px var(--color-brand);
+	}
+	.cf__choice input,
+	.cf__check input {
+		margin-top: 0.3rem;
+		width: 1.1rem;
+		height: 1.1rem;
+		accent-color: var(--color-brand);
+		flex-shrink: 0;
+	}
+	.cf__choice span {
+		display: grid;
+		gap: 0.15rem;
+	}
+	.cf__choice small {
+		color: var(--color-text-secondary);
+		font-size: var(--font-size-sm);
+	}
+	.cf__check {
+		display: flex;
+		gap: 0.6rem;
+		align-items: flex-start;
+		cursor: pointer;
+		font-weight: 600;
+	}
+	.cf textarea,
+	.cf input[type="text"],
+	.cf input[type="email"],
+	.cf input[type="url"] {
+		width: 100%;
+		font: inherit;
+		font-size: 1rem;
+		padding: 0.7rem 0.85rem;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius);
+		background: var(--color-bg);
+		color: var(--color-text);
+	}
+	.cf textarea {
+		min-height: 10rem;
+		line-height: 1.8;
+		resize: vertical;
+	}
+	.cf [aria-invalid="true"] {
+		border-color: #b42318;
+		box-shadow: 0 0 0 1px #b42318;
+	}
+	.cf__error {
+		color: #b42318;
+		font-weight: 600;
+		font-size: var(--font-size-sm);
+		line-height: 1.7;
+	}
+	.cf__summary {
+		border: 2px solid #b42318;
+		border-radius: var(--radius-lg);
+		padding: 1rem 1.25rem;
+	}
+	.cf__summary-title {
+		font-weight: 700;
+		color: #b42318;
+		margin-bottom: 0.5rem;
+	}
+	.cf__summary ul {
+		list-style: disc;
+		margin-left: 1.25rem;
+		line-height: 1.9;
+	}
+	.cf__summary a {
+		color: #b42318;
+	}
+	.cf__article {
+		padding: 0.875rem 1rem;
+		border-radius: var(--radius-lg);
+		background: var(--color-fill, var(--color-bg));
+		overflow-wrap: anywhere;
+	}
+	.cf__article-label {
+		font-size: var(--font-size-sm);
+		color: var(--color-text-secondary);
+	}
+	.cf__article-title {
+		font-weight: 600;
+		line-height: 1.6;
+	}
+	.cf__article-url {
+		font-size: var(--font-size-sm);
+		color: var(--color-text-secondary);
+	}
+	.cf__extra {
+		border-top: 1px solid var(--color-border);
+		padding-top: 1rem;
+	}
+	.cf__extra summary {
+		cursor: pointer;
+		font-weight: 600;
+		padding-block: 0.4rem;
+	}
+	.cf__extra[open] summary {
+		margin-bottom: 1rem;
+	}
+	.cf__extra .cf__field + .cf__field {
+		margin-top: 1.25rem;
+	}
+	.cf__notes {
+		list-style: disc;
+		margin-left: 1.25rem;
+		font-size: var(--font-size-sm);
+		line-height: 1.85;
+		color: var(--color-text-secondary);
+	}
+	.cf__turnstile:empty {
+		display: none;
+	}
+	.cf__mock {
+		font-weight: 400;
+		padding: 0.6rem 0.8rem;
+		border: 1px dashed var(--color-border);
+		border-radius: var(--radius);
+	}
+	.cf__submit {
+		min-height: 3rem;
+		min-width: 12rem;
+		font-size: 1.0625rem;
+	}
+	.cf__submit:disabled {
+		opacity: 0.6;
+		cursor: progress;
+	}
+	.cf__status {
+		line-height: 1.8;
+		font-weight: 600;
+	}
+	.cf__status:empty {
+		display: none;
+	}
+	.cf__done {
+		display: grid;
+		gap: 1rem;
+		line-height: 1.85;
+	}
+	.cf__done-title {
+		font-size: 1.375rem;
+	}
+	.cf__done .btn {
+		justify-self: start;
+	}
+	.cf__noscript {
+		font-weight: 600;
+	}
+	@media (max-width: 640px) {
+		.cf__submit {
+			width: 100%;
+		}
+	}
+</style>

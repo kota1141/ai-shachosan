@@ -1,31 +1,95 @@
 ---
+import { env as rawEnv } from "cloudflare:workers";
+import { getEmDashEntry } from "emdash";
+
 import Base from "../layouts/Base.astro";
 import ContactActions from "../components/ContactActions.astro";
+import ContactForm from "../components/ContactForm.astro";
+import { SLUG_PATTERN, isInquiryType, isPlacement, type InquiryType, type Placement } from "../config/inquiry";
+import { readInquiryConfig, type InquiryEnv } from "../lib/inquiry/env";
+import { OPERATOR } from "../utils/site-info";
+
+const config = readInquiryConfig(rawEnv as unknown as InquiryEnv, import.meta.env.DEV);
+
+// 内部リンクから受け取るのは、用件・記事slug・設置位置の固定値だけ。
+// 任意の文字列はそのまま表示・記録・計測しない。
+const params = Astro.url.searchParams;
+const typeParam = params.get("type");
+const initialType: InquiryType | null = isInquiryType(typeParam) ? typeParam : null;
+const fromParam = params.get("from");
+const placement: Placement = isPlacement(fromParam) && fromParam !== "contact" ? fromParam : "direct";
+
+let article: { slug: string; title: string; url: string } | null = null;
+const articleParam = params.get("article") ?? "";
+if (SLUG_PATTERN.test(articleParam)) {
+	try {
+		const { entry } = await getEmDashEntry("posts", articleParam);
+		const status = (entry?.data as { status?: string } | undefined)?.status;
+		if (entry && (!status || status === "published")) {
+			article = {
+				slug: articleParam,
+				title: String(entry.data.title ?? ""),
+				url: `${Astro.url.origin}/posts/${articleParam}`,
+			};
+		}
+	} catch {
+		article = null;
+	}
+}
 ---
 
-<Base title="メールで相談する" description="薬局のMEOについて、メールで相談できます。まだ相談内容がまとまっていなくても大丈夫です。">
+<Base
+	title="薬局のMEO・ホームページについて質問・相談する"
+	description="記事への質問や取り上げてほしいテーマ、自分の薬局のMEO・ホームページについての相談を、サイト内のフォームから非公開で送れます。"
+	analytics={{ pageType: "contact", path: "/contact", title: "質問・相談" }}
+>
 	<header class="band intro">
 		<div class="frame">
-			<p class="eyebrow">お問い合わせ</p>
-			<h1 class="intro__title contact-title">薬局のMEOについて、<br />メールで相談する</h1>
-			<p class="intro__lead">「何から始めればよいか」「自分でできる範囲を知りたい」「代行や保守を相談したい」など、今の状況をお聞かせください。まだ相談内容がまとまっていなくても大丈夫です。</p>
+			<p class="eyebrow">質問・相談</p>
+			<h1 class="intro__title contact-title">薬局のMEO・ホームページについて<wbr />質問・相談する</h1>
+			<p class="intro__lead">記事で分かりにくかったところ、取り上げてほしいテーマ、自分の薬局のGoogleマップやホームページについての相談を、このページから非公開で送れます。相談内容がまとまっていなくても大丈夫です。</p>
 		</div>
 	</header>
 
 	<section class="band section">
-		<div class="frame contact">
+		<div class="frame contact" data-placement="contact">
+			<div class="contact__person">
+				<p class="contact__person-label">受け付けて返信する担当者</p>
+				<p class="contact__person-name">{OPERATOR.display}</p>
+				<p class="contact__person-note">記事に登場する薬局長と青葉まことは説明のためのキャラクターで、お問い合わせには対応しません。</p>
+			</div>
+
 			<div class="contact__card">
-				<ContactActions />
+				{config.formReady ? (
+					<ContactForm
+						initialType={initialType}
+						placement={placement}
+						article={article}
+						turnstileSiteKey={config.turnstileSiteKey ?? ""}
+						mock={config.devMock}
+					/>
+				) : (
+					<div class="contact__unavailable" role="note">
+						<h2>フォームは準備中です</h2>
+						<p>現在、サイト内のフォームは受け付けていません。お手数ですが、下のメールアドレスからご連絡ください。</p>
+					</div>
+				)}
+			</div>
+
+			<div class="contact__mail">
+				<h2>メールでも受け付けています</h2>
+				<p>フォームが使えない場合や、メールのほうが送りやすい場合はこちらからどうぞ。</p>
+				<ContactActions showPerson={false} secondary={config.formReady} />
 			</div>
 
 			<div class="contact__privacy">
 				<h2>個人情報について</h2>
-				<p>お送りいただいた情報は、相談への返信や、ご希望に応じたサービスの案内・見積もりのために使用します。詳しくは<a href="/privacy/">プライバシーポリシー</a>をご確認ください。</p>
-				<p><strong>患者さんの氏名、処方箋の画像、病歴・服薬情報などは記載・添付しないでください。</strong></p>
+				<p>お送りいただいた情報は、ご質問・ご相談への返信、記事づくりの参考、ご希望に応じたサービスの案内・見積もりのために使用します。お問い合わせを理由に、メールマガジンへ自動で登録することはありません。詳しくは<a href="/privacy/">プライバシーポリシー</a>をご確認ください。</p>
+				<p><strong>患者さんの氏名、処方内容、病歴・服薬情報、ログイン情報（IDやパスワード）は記載しないでください。</strong></p>
 			</div>
 
 			<details class="contact__hints">
-				<summary>書いておくと話が早いこと（すべて任意）</summary>
+				<summary>相談のときに書いておくと話が早いこと（すべて任意）</summary>
 				<ul>
 					<li>薬局名と地域</li>
 					<li>Googleビジネスプロフィールを管理している人</li>
@@ -53,12 +117,37 @@ import ContactActions from "../components/ContactActions.astro";
 		border-radius: var(--radius-xl);
 		padding: clamp(1.25rem, 1rem + 2vw, 2rem);
 	}
+	.contact__person {
+		display: grid;
+		gap: 0.25rem;
+		line-height: 1.7;
+	}
+	.contact__person-label {
+		font-size: var(--font-size-sm);
+		color: var(--color-muted);
+	}
+	.contact__person-name {
+		font-weight: 700;
+		font-size: 1.125rem;
+	}
+	.contact__person-note {
+		font-size: var(--font-size-sm);
+		color: var(--color-text-secondary);
+	}
+	.contact__unavailable h2,
+	.contact__mail h2,
+	.contact__privacy h2 {
+		margin-bottom: 0.75rem;
+	}
+	.contact__mail > p {
+		margin-bottom: 1rem;
+		line-height: 1.8;
+		color: var(--color-text-secondary);
+	}
 	.contact__privacy p,
+	.contact__unavailable p,
 	.contact__self {
 		line-height: 1.85;
-	}
-	.contact__privacy h2 {
-		margin-bottom: .75rem;
 	}
 	.contact__hints {
 		border-top: 1px solid var(--color-border);
@@ -67,25 +156,29 @@ import ContactActions from "../components/ContactActions.astro";
 	.contact-title {
 		font-size: clamp(1.75rem, 1.3rem + 2.4vw, 3rem);
 		line-height: 1.3;
-		word-break: keep-all;
+		word-break: auto-phrase;
 		overflow-wrap: anywhere;
 	}
 	.contact__hints summary {
 		cursor: pointer;
 		font-weight: 600;
-		padding-block: .6rem;
+		padding-block: 0.6rem;
 		list-style: none;
 	}
-	.contact__hints summary::-webkit-details-marker { display: none; }
+	.contact__hints summary::-webkit-details-marker {
+		display: none;
+	}
 	.contact__hints summary::before {
 		content: "＋";
 		display: inline-block;
 		width: 1.5em;
 		color: var(--color-brand);
 	}
-	.contact__hints[open] summary::before { content: "－"; }
+	.contact__hints[open] summary::before {
+		content: "－";
+	}
 	.contact__hints ul {
-		margin: .75rem 0 .75rem 1.25rem;
+		margin: 0.75rem 0 0.75rem 1.25rem;
 		list-style: disc;
 		line-height: 2;
 	}

@@ -25,6 +25,29 @@
 	},
 	// Sandboxed plugins require Worker Loader, available on Workers paid plans. Uncomment to enable:
 	// "worker_loaders": [{ "binding": "LOADER" }],
+	// 公開してよい設定値（秘密値は wrangler secret / ダッシュボードの「シークレット」で設定する）
+	// 詳しくは docs/contact-ga4.md
+	"vars": {
+		// GA4の測定ID（G-から始まる）。空のあいだはGA4も同意表示も出ない
+		"GA4_MEASUREMENT_ID": "",
+		// GA4を動かすホスト名。ローカル・プレビューURL・管理画面では動かない
+		"ANALYTICS_HOSTS": "ai-shachosan.com",
+		// Turnstileのサイトキー（公開値）。秘密鍵 TURNSTILE_SECRET_KEY はシークレットで設定
+		"TURNSTILE_SITE_KEY": "",
+		// Turnstileの検証で受け付けるホスト名
+		"SITE_HOSTS": "ai-shachosan.com",
+		"SITE_URL": "https://ai-shachosan.com",
+		// 通知メールの宛先（Email Routingで確認済みの宛先）と差出人（このドメインのアドレス）
+		"INQUIRY_TO": "taiwa.kawamura@gmail.com",
+		"INQUIRY_FROM": "form@ai-shachosan.com",
+		// 回数制限（1送信元あたり1時間、サイト全体の1時間・1日）
+		"INQUIRY_LIMIT_PER_IP_HOUR": "5",
+		"INQUIRY_LIMIT_GLOBAL_HOUR": "30",
+		"INQUIRY_LIMIT_GLOBAL_DAY": "100",
+	},
+	// 通知メール（Cloudflare Email Routing）。Email Routingを有効にし、
+	// 宛先を確認済みにしてから、次の行のコメントを外してデプロイする。
+	// "send_email": [{ "name": "INQUIRY_MAIL", "destination_address": "taiwa.kawamura@gmail.com" }],
 	// General maintenance cron trigger
 	"triggers": {
 		"crons": ["* * * * *"],

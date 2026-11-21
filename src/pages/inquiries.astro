@@ -1,0 +1,122 @@
+---
+// 受付一覧（運営者用）。EmDashに管理者としてログインしているときだけ表示する。
+// 個人情報を含むため、キャッシュ・検索エンジン・GA4の対象にしない。
+import { env as rawEnv } from "cloudflare:workers";
+import Base from "../layouts/Base.astro";
+import { INQUIRY_TYPE_LABEL, isInquiryType } from "../config/inquiry";
+import { readInquiryConfig, type InquiryEnv } from "../lib/inquiry/env";
+import { ensureSchema, listInquiries, type InquiryRow } from "../lib/inquiry/store";
+
+const ADMIN_LEVEL = 50;
+const user = Astro.locals.user;
+if (!user || (user.role ?? 0) < ADMIN_LEVEL) {
+	return Astro.rewrite("/404");
+}
+Astro.response.headers.set("cache-control", "private, no-store");
+Astro.response.headers.set("x-robots-tag", "noindex, nofollow");
+
+const env = rawEnv as unknown as InquiryEnv;
+const config = readInquiryConfig(env, import.meta.env.DEV);
+let rows: InquiryRow[] = [];
+let loadError = false;
+if (env.DB) {
+	try {
+		await ensureSchema(env.DB);
+		rows = await listInquiries(env.DB, 200);
+	} catch {
+		loadError = true;
+	}
+}
+const notice = Astro.url.searchParams.get("done");
+
+const STATUS_LABEL: Record<string, string> = {
+	sent: "通知済み",
+	sending: "通知中",
+	pending: "通知待ち",
+	failed: "通知失敗（自動で再試行）",
+	not_configured: "通知未設定",
+};
+function jst(iso: string | null) {
+	if (!iso) return "";
+	return new Date(iso).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
+}
+---
+
+<Base title="受付一覧" robots="noindex, nofollow" analytics={{ disabled: true }}>
+	<section class="band section">
+		<div class="frame inq">
+			<h1>受付一覧</h1>
+			<p class="inq__lead">
+				フォームから受け付けた質問・相談です（新しい順、最大200件）。この画面は管理者だけが見られます。
+				不要になった受付は「削除」してください。削除は元に戻せません。
+			</p>
+			<ul class="inq__status">
+				<li>受付フォーム：{config.formReady ? "受付中" : "停止中（設定が不足しています）"}</li>
+				<li>Turnstile：{config.devMock ? "開発用モック" : config.turnstileReady ? "設定済み" : "未設定"}</li>
+				<li>通知メール：{config.devMock ? "開発用モック" : config.notifyReady ? "設定済み" : "未設定"}</li>
+			</ul>
+			{notice === "deleted" && <p class="inq__notice" role="status">削除しました。</p>}
+			{notice === "requeued" && <p class="inq__notice" role="status">通知を再試行の対象に戻しました（1分ほどで送信されます）。</p>}
+			{loadError && <p class="inq__notice">一覧を読み込めませんでした。</p>}
+			{!loadError && rows.length === 0 && <p>まだ受付はありません。</p>}
+
+			{rows.map((r) => (
+				<article class="inq__item">
+					<header class="inq__head">
+						<span class="inq__type">{isInquiryType(r.inquiry_type) ? INQUIRY_TYPE_LABEL[r.inquiry_type] : r.inquiry_type}</span>
+						<span>受付番号 {r.id}</span>
+						<span>{jst(r.created_at)}</span>
+						<span class={`inq__notify inq__notify--${r.notify_status}`}>{STATUS_LABEL[r.notify_status] ?? r.notify_status}</span>
+					</header>
+					<dl class="inq__meta">
+						<dt>返信希望</dt><dd>{r.wants_reply ? `あり（${r.email ?? ""}）` : "なし"}</dd>
+						{r.name && (<><dt>お名前</dt><dd>{r.name}</dd></>)}
+						{r.pharmacy && (<><dt>薬局名</dt><dd>{r.pharmacy}</dd></>)}
+						{r.url && (<><dt>HP（入力値）</dt><dd class="inq__url">{r.url}</dd></>)}
+						{r.source_article && (<><dt>対象記事</dt><dd><a href={`/posts/${r.source_article}`}>{r.source_article_title ?? r.source_article}</a></dd></>)}
+						<dt>設置位置</dt><dd>{r.placement}</dd>
+					</dl>
+					<p class="inq__body">{r.body}</p>
+					<div class="inq__actions">
+						{(r.notify_status === "failed" || r.notify_status === "not_configured") && (
+							<form method="post" action="/api/inquiry-admin">
+								<input type="hidden" name="action" value="requeue" />
+								<input type="hidden" name="id" value={String(r.id)} />
+								<button class="btn btn--ghost btn--sm" type="submit">通知を再試行</button>
+							</form>
+						)}
+						<form method="post" action="/api/inquiry-admin" data-confirm="この受付を削除します。元に戻せません。よろしいですか？">
+							<input type="hidden" name="action" value="delete" />
+							<input type="hidden" name="id" value={String(r.id)} />
+							<button class="btn btn--ghost btn--sm" type="submit">削除</button>
+						</form>
+					</div>
+				</article>
+			))}
+		</div>
+	</section>
+</Base>
+
+<script>
+	document.querySelectorAll<HTMLFormElement>("form[data-confirm]").forEach((f) => {
+		f.addEventListener("submit", (e) => {
+			if (!window.confirm(f.dataset.confirm ?? "")) e.preventDefault();
+		});
+	});
+</script>
+
+<style>
+	.inq { display: grid; gap: 1.5rem; max-width: 52rem; }
+	.inq__lead { line-height: 1.8; color: var(--color-text-secondary); }
+	.inq__status { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; font-size: var(--font-size-sm); }
+	.inq__notice { font-weight: 600; color: var(--color-brand); }
+	.inq__item { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 1.25rem; display: grid; gap: .75rem; }
+	.inq__head { display: flex; flex-wrap: wrap; gap: .5rem 1rem; font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+	.inq__type { font-weight: 700; color: var(--color-text); }
+	.inq__notify--failed, .inq__notify--not_configured { color: #b42318; font-weight: 600; }
+	.inq__meta { display: grid; grid-template-columns: max-content 1fr; gap: .25rem 1rem; font-size: var(--font-size-sm); }
+	.inq__meta dt { color: var(--color-muted); }
+	.inq__url { overflow-wrap: anywhere; }
+	.inq__body { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.8; border-top: 1px solid var(--color-border); padding-top: .75rem; }
+	.inq__actions { display: flex; gap: .5rem; justify-content: flex-end; }
+</style>

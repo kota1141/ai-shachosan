@@ -8,6 +8,10 @@ import {
 } from "emdash/ui";
 import { createPublicPageContext } from "emdash/page";
 import LiveSearch from "emdash/ui/search";
+import { env as workerEnv } from "cloudflare:workers";
+
+import Analytics from "../components/Analytics.astro";
+import type { PageType } from "../config/inquiry";
 
 import { getSiteLocale } from "../utils/locale";
 import { resolveBlogSiteIdentity } from "../utils/site-identity";
@@ -27,6 +31,17 @@ interface Props {
 	author?: string | null;
 	/** Pass content reference for plugin page contributions on content pages */
 	content?: { collection: string; id: string; slug?: string | null };
+	/**
+	 * GA4用のページ情報。path/title は送信してよい安全な値だけを渡す
+	 * （検索語や任意のURLを含めない）。disabled で計測自体を行わない。
+	 */
+	analytics?: {
+		disabled?: boolean;
+		pageType?: PageType;
+		path?: string;
+		title?: string;
+		articleSlug?: string | null;
+	};
 }
 
 const {
@@ -41,6 +56,7 @@ const {
 	modifiedTime,
 	author,
 	content,
+	analytics = {},
 } = Astro.props;
 const [settingsResult, menuResult] = await Promise.all([
 	getSiteSettingsWithCacheHint(),
@@ -101,6 +117,38 @@ function navCurrent(url: string): "page" | "true" | undefined {
 	if (path !== "/" && currentPath.startsWith(`${path}/`)) return "true";
 	return undefined;
 }
+
+// ---- GA4：本番ホスト・測定IDあり・未ログイン・計測対象ページのときだけ有効 ----
+const vars = workerEnv as unknown as Record<string, string | undefined>;
+const gaId = String(vars.GA4_MEASUREMENT_ID ?? "").trim();
+const gaHosts = String(vars.ANALYTICS_HOSTS ?? "")
+	.split(",")
+	.map((h) => h.trim().toLowerCase())
+	.filter(Boolean);
+const analyticsEnabled =
+	/^G-[A-Z0-9]{4,20}$/.test(gaId) &&
+	gaHosts.includes(Astro.url.hostname.toLowerCase()) &&
+	!isLoggedIn &&
+	!analytics.disabled &&
+	!Astro.url.pathname.startsWith("/_emdash");
+
+function inferPageType(path: string): PageType {
+	if (path === "/") return "home";
+	if (/^\/posts\/[^/]+$/.test(path)) return "article";
+	if (path === "/posts" || path.startsWith("/category/") || path.startsWith("/tag/")) return "article_list";
+	if (path === "/services") return "services";
+	if (path === "/contact") return "contact";
+	if (path === "/pages/about") return "about";
+	if (path === "/privacy") return "privacy";
+	return "other";
+}
+const analyticsConfig = {
+	measurementId: gaId,
+	pagePath: analytics.path ?? (currentPath === "/" ? "/" : `${currentPath}${Astro.url.pathname.endsWith("/") ? "/" : ""}`),
+	pageTitle: analytics.title ?? title,
+	pageType: analytics.pageType ?? inferPageType(currentPath),
+	articleSlug: analytics.articleSlug ?? null,
+};
 
 const lang = getSiteLocale() ?? "ja";
 const monogram = [...siteTitle.trim()][0]?.toUpperCase() ?? "";
@@ -210,11 +258,11 @@ const year = new Date().getFullYear();
 						>
 					</div>
 					<a
-						href="/contact"
+						href="/contact?from=header"
 						class="btn btn--sm header-contact"
-						aria-current={navCurrent("/contact")}
+						aria-current={currentPath === "/contact" ? "page" : undefined}
 					>
-						相談する
+						質問・相談
 					</a>
 					<a
 						href="/search"
@@ -318,7 +366,7 @@ const year = new Date().getFullYear();
 					<ul class="site-footer__links">
 						<li><a href="/pages/about">運営者情報・編集方針</a></li>
 						<li><a href="/privacy/">プライバシーポリシー</a></li>
-						<li><a href="/contact">お問い合わせ</a></li>
+						<li><a href="/contact?from=footer">質問・相談</a></li>
 						<li><a href="/characters/">薬局長と青葉さんについて</a></li>
 						<li>
 							<a href="/rss.xml">
@@ -339,6 +387,13 @@ const year = new Date().getFullYear();
 								更新情報（RSS）
 							</a>
 						</li>
+						{analyticsEnabled && (
+							<li>
+								<button type="button" class="footer-linkbtn" id="analytics-settings">
+									アクセス解析の設定
+								</button>
+							</li>
+						)}
 					</ul>
 				</div>
 				<div class="site-footer__col site-footer__widgets">
@@ -1146,7 +1201,7 @@ const year = new Date().getFullYear();
 				width: var(--search-input-width);
 			}
 
-			/* スマホだけ表示する相談ボタン（PCではメニューの「メールで相談」を使う） */
+			/* スマホだけ表示する相談ボタン（PCではメニューの「質問・相談」を使う） */
 			.header-contact {
 				display: none;
 			}
@@ -1335,6 +1390,22 @@ const year = new Date().getFullYear();
 
 			.site-footer__links a:hover {
 				color: var(--color-text);
+			}
+
+			.footer-linkbtn {
+				padding: 0;
+				border: 0;
+				background: none;
+				font: inherit;
+				font-size: var(--font-size-sm);
+				color: var(--color-text-secondary);
+				cursor: pointer;
+				text-align: start;
+			}
+
+			.footer-linkbtn:hover {
+				color: var(--color-text);
+				text-decoration: underline;
 			}
 
 			.site-footer__links svg {
@@ -1539,6 +1610,7 @@ const year = new Date().getFullYear();
 				searchInput.focus();
 			});
 		</script>
+		{analyticsEnabled && <Analytics config={analyticsConfig} />}
 		<EmDashBodyEnd page={pageCtx} />
 	</body>
 </html>

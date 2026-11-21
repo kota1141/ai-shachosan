@@ -21,5 +21,5 @@ export const CONTACT_MAILTO = `mailto:${CONTACT_EMAIL}?subject=${encodeURICompon
 /** Policy dates. Set when the operator approves the published text. */
 export const PRIVACY_POLICY = {
 	established: "2026年11月19日",
-	updated: "2026年11月19日",
+	updated: "2026年11月21日",
 } as const;

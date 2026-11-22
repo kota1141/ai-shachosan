@@ -1518,8 +1518,34 @@ const year = new Date().getFullYear();
 				}
 			}
 
-			/* Phones: brand and actions on the first row, the nav on one compact row below */
-			@media (max-width: 640px) {
+			/* タブレット幅：検索欄をアイコンにして、メニューを1行に収める */
+			@media (min-width: 768px) and (max-width: 1099px) {
+				.site-header__inner {
+					gap: var(--spacing-4);
+				}
+
+				.site-nav ul {
+					flex-wrap: nowrap;
+				}
+
+				.site-nav a {
+					padding: 6px 10px;
+				}
+
+				.site-search {
+					display: none;
+				}
+
+				.site-search-link {
+					display: inline-grid;
+					width: 2.25rem;
+					height: 2.25rem;
+				}
+			}
+
+			/* スマホと小さめのタブレット（767px以下）：1段目にサイト名と相談・検索ボタン、
+			   2段目にメニューを1行で並べる（入りきらない幅では横にスクロール） */
+			@media (max-width: 767px) {
 				.site-header {
 					position: relative;
 				}

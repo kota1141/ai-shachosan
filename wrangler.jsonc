@@ -33,7 +33,7 @@
 		// GA4を動かすホスト名。ローカル・プレビューURL・管理画面では動かない
 		"ANALYTICS_HOSTS": "ai-shachosan.com",
 		// Turnstileのサイトキー（公開値）。秘密鍵 TURNSTILE_SECRET_KEY はシークレットで設定
-		"TURNSTILE_SITE_KEY": "",
+		"TURNSTILE_SITE_KEY": "0x4AAAAAAGMtJkTQjsuRU0wx",
 		// Turnstileの検証で受け付けるホスト名
 		"SITE_HOSTS": "ai-shachosan.com",
 		"SITE_URL": "https://ai-shachosan.com",

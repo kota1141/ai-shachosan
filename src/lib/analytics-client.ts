@@ -20,6 +20,11 @@ export interface AnalyticsConfig {
 }
 
 const CONSENT_KEY = "meo-analytics-consent";
+/**
+ * 同じドメインの別サイト（pharmacist-life.ai-shachosan.com など）とCookieを共有しないよう、
+ * このサイト専用の名前（meo__ga…）で、このホストだけに保存する。
+ */
+const COOKIE_PREFIX = "meo";
 const CONSENT_VERSION = 1;
 type Choice = "granted" | "denied";
 
@@ -182,6 +187,8 @@ function startTag() {
 		...page,
 		...campaignFromSearch(location.search),
 		send_page_view: false,
+		cookie_prefix: COOKIE_PREFIX,
+		cookie_domain: "none",
 		allow_google_signals: false,
 		allow_ad_personalization_signals: false,
 	});
@@ -193,16 +200,11 @@ function startTag() {
 }
 
 function deleteGaCookies() {
-	const host = location.hostname;
-	const parts = host.split(".");
-	const domains = ["", host, `.${host}`];
-	if (parts.length > 2) domains.push(`.${parts.slice(-2).join(".")}`);
+	// このサイトのGA4 Cookie（meo__ga…、ホスト限定）だけを消す。別サイトのCookieには触れない
 	for (const c of document.cookie.split(";")) {
 		const name = c.split("=")[0]?.trim() ?? "";
-		if (name !== "_ga" && !name.startsWith("_ga_") && name !== "_gid" && name !== "_gat") continue;
-		for (const d of domains) {
-			document.cookie = `${name}=; Max-Age=0; path=/${d ? `; domain=${d}` : ""}; SameSite=Lax`;
-		}
+		if (!name.startsWith(`${COOKIE_PREFIX}__ga`)) continue;
+		document.cookie = `${name}=; Max-Age=0; path=/; SameSite=Lax`;
 	}
 }
 

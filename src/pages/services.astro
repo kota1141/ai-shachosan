@@ -46,7 +46,7 @@ const services = [
 ];
 
 const steps = [
-	{ title: "メールで今の状況を送る", text: "相談内容がまとまっていなくても大丈夫です。" },
+	{ title: "フォームまたはメールで今の状況を送る", text: "相談内容がまとまっていなくても大丈夫です。" },
 	{ title: "内容を確認して返信", text: "分からないところは、返信で確認します。" },
 	{ title: "必要な支援の範囲を整理", text: "自分でできること、任せたいことを一緒に分けます。" },
 	{ title: "作業内容と条件を確認", text: "作業回数・対応時間・費用の範囲を確認してから、依頼するかを決めます。" },
@@ -86,10 +86,10 @@ const steps = [
 	</section>
 
 	<section class="band section" aria-labelledby="svc-contact-title">
-		<div class="frame svc-contact">
+		<div class="frame svc-contact" data-placement="services">
 			<div class="svc-contact__intro">
 				<p class="eyebrow">3つの支援に共通</p>
-				<h2 id="svc-contact-title" class="svc-contact__title">まずは、メールで相談する</h2>
+				<h2 id="svc-contact-title" class="svc-contact__title">まずは、フォームから相談する</h2>
 				<p class="svc-contact__text">どの支援が合うか分からない段階でも相談できます。薬局の状況を伺い、必要な範囲から一緒に整理します。</p>
 
 				<div class="svc-person">
@@ -115,7 +115,9 @@ const steps = [
 				</ol>
 
 				<div class="svc-contact__card">
-					<ContactActions showPerson={false} />
+					<a class="btn svc-contact__form" href="/contact?type=consultation&from=services">相談フォームへ進む</a>
+					<p class="svc-contact__alt">サイト内のフォームから、非公開で送れます。メールでも受け付けています。</p>
+					<ContactActions showPerson={false} secondary />
 				</div>
 				<p class="svc-contact__more">
 					相談前に気をつけること（患者さんの情報は送らない、など）は<a href="/contact">お問い合わせページ</a>と<a href="/privacy/">プライバシーポリシー</a>にまとめています。
@@ -289,6 +291,18 @@ const steps = [
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-xl);
 		background: var(--color-surface);
+	}
+	.svc-contact__form {
+		min-height: 3rem;
+		padding-inline: 1.75rem;
+		font-size: 1.0625rem;
+	}
+	.svc-contact__alt {
+		margin: .75rem 0 1.25rem;
+		padding-bottom: 1.25rem;
+		border-bottom: 1px solid var(--color-border);
+		color: var(--color-text-secondary);
+		line-height: 1.8;
 	}
 	.svc-contact__more {
 		margin-top: 1rem;

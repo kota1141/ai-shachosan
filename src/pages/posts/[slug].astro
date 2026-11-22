@@ -121,6 +121,7 @@ const hasHeadings = (post.data.content ?? []).some(
 	publishedTime={post.data.publishedAt?.toISOString() ?? null}
 	modifiedTime={post.data.updatedAt.toISOString()}
 	content={{ collection: "posts", id: post.data.id, slug }}
+	analytics={{ pageType: "article", articleSlug: slug, title: post.data.title }}
 >
 	<article class="post">
 		<header class="intro post-header">
@@ -206,10 +207,13 @@ const hasHeadings = (post.data.content ?? []).some(
 					<div class="prose" data-post-content>
 						<PortableText value={post.data.content} />
 					</div>
-					<aside class="post-contact" aria-labelledby="post-contact-title">
-						<p id="post-contact-title" class="post-contact__title">自分の薬局に当てはめると、どうなる？</p>
-						<p>状況に合わせて相談したいときは、メールでお気軽にどうぞ。相談内容がまとまっていなくても大丈夫です。</p>
-						<a class="post-contact__link" href="/contact">メールで相談する →</a>
+					<aside class="post-contact" aria-labelledby="post-contact-title" data-placement="article_end">
+						<p id="post-contact-title" class="post-contact__title">この記事や、自分の薬局について聞いてみる</p>
+						<p>記事で分かりにくかったところや、取り上げてほしいテーマ、自分の薬局に当てはめたときの相談を、サイト内のフォームから非公開で送れます。</p>
+						<div class="post-contact__links">
+							<a class="post-contact__link" href={`/contact?type=question&article=${encodeURIComponent(slug)}&from=article_end`}>この記事について質問する →</a>
+							<a class="post-contact__link" href={`/contact?type=consultation&article=${encodeURIComponent(slug)}&from=article_end`}>自分の薬局について相談する →</a>
+						</div>
 					</aside>
 				</div>
 
@@ -409,6 +413,12 @@ const hasHeadings = (post.data.content ?? []).some(
 		margin-bottom: .25rem;
 	}
 
+	.post-contact__links {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0 1.5rem;
+		margin-top: .25rem;
+	}
 	.post-contact__link {
 		display: inline-flex;
 		align-items: center;

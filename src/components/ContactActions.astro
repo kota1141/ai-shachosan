@@ -8,12 +8,14 @@ import { CONTACT_EMAIL, CONTACT_MAILTO, OPERATOR } from "../utils/site-info";
 interface Props {
 	/** 担当者表記を出すか（担当者を別に大きく出すページでは false） */
 	showPerson?: boolean;
+	/** フォームを主な連絡方法として並べるページでは true（メールボタンを控えめにする） */
+	secondary?: boolean;
 }
-const { showPerson = true } = Astro.props;
+const { showPerson = true, secondary = false } = Astro.props;
 ---
 
 <div class="contact-actions">
-	<a class="btn contact-actions__primary" href={CONTACT_MAILTO}>メールを作成する</a>
+	<a class:list={["btn", "contact-actions__primary", { "btn--ghost": secondary }]} href={CONTACT_MAILTO}>メールを作成する</a>
 
 	<p class="contact-actions__label">送り先のメールアドレス</p>
 	<div class="contact-actions__address">
@@ -36,6 +38,8 @@ const { showPerson = true } = Astro.props;
 </div>
 
 <script>
+	import { currentArticle, placementFor, track } from "../lib/analytics-client";
+
 	const status = document.getElementById("copy-status");
 	const emailEl = document.getElementById("contact-email");
 
@@ -54,6 +58,8 @@ const { showPerson = true } = Astro.props;
 			try {
 				await navigator.clipboard.writeText(text);
 				if (status) status.textContent = "コピーしました";
+				// コピーに成功したときだけ数える（送信完了とは別の途中行動）
+				track("email_copy", { placement: placementFor(button), source_article: currentArticle() });
 			} catch {
 				// Clipboard can be blocked (permissions, non-secure context).
 				// Leave the address selected so it can be copied by hand.

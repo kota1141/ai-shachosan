@@ -1,0 +1,126 @@
+---
+/**
+ * GA4の同意表示と計測の初期化。
+ * enabled のとき（本番ホスト・測定IDあり・未ログイン）だけ描画する。
+ * 「許可する」を選ぶまでGoogleタグは読み込まれない。
+ */
+import type { AnalyticsConfig } from "../lib/analytics-client";
+
+interface Props {
+	config: AnalyticsConfig;
+}
+const { config } = Astro.props;
+---
+
+<script type="application/json" id="meo-analytics-config" set:html={JSON.stringify(config).replace(/</g, "\\u003c")} />
+
+<section
+	class="consent"
+	id="analytics-consent"
+	role="region"
+	aria-labelledby="consent-title"
+	hidden
+>
+	<div class="consent__inner">
+		<h2 class="consent__title" id="consent-title">アクセス解析（Googleアナリティクス）について</h2>
+		<p class="consent__text">
+			記事や案内を改善するため、許可いただいた場合に限り、Googleアナリティクス（GA4）で閲覧状況を分析します。
+			許可しなくても、記事の閲覧や質問・相談フォームはそのまま使えます。選択はフッターの「アクセス解析の設定」からいつでも変更できます。
+			<a href="/privacy/#analytics">詳しくはプライバシーポリシー</a>
+		</p>
+		<div class="consent__actions">
+			<button type="button" class="btn consent__btn" data-consent="granted">許可する</button>
+			<button type="button" class="btn consent__btn" data-consent="denied">許可しない</button>
+		</div>
+		<p class="consent__state" role="status" aria-live="polite"></p>
+	</div>
+</section>
+
+<script>
+	import { bindClickTracking, initAnalytics, readChoice, setChoice, type AnalyticsConfig } from "../lib/analytics-client";
+
+	const el = document.getElementById("meo-analytics-config");
+	const banner = document.getElementById("analytics-consent");
+	if (el && banner) {
+		const cfg = JSON.parse(el.textContent || "{}") as AnalyticsConfig;
+		initAnalytics(cfg);
+		bindClickTracking();
+
+		const stateEl = banner.querySelector<HTMLElement>(".consent__state");
+		let openedFromSettings = false;
+		const show = (fromSettings: boolean) => {
+			openedFromSettings = fromSettings;
+			banner.hidden = false;
+			const current = readChoice();
+			if (stateEl) {
+				stateEl.textContent = fromSettings
+					? current === "granted"
+						? "現在：許可しています"
+						: current === "denied"
+							? "現在：許可していません"
+							: ""
+					: "";
+			}
+			if (fromSettings) banner.querySelector<HTMLButtonElement>("[data-consent]")?.focus();
+		};
+		if (!readChoice()) show(false);
+
+		banner.querySelectorAll<HTMLButtonElement>("[data-consent]").forEach((btn) => {
+			btn.addEventListener("click", () => {
+				setChoice(btn.dataset.consent === "granted" ? "granted" : "denied");
+				banner.hidden = true;
+				// 設定から開いた場合だけ、元のボタンへフォーカスを戻す（初回表示ではページ位置を動かさない）
+				if (openedFromSettings) document.getElementById("analytics-settings")?.focus({ preventScroll: true });
+			});
+		});
+		document.getElementById("analytics-settings")?.addEventListener("click", () => show(true));
+	}
+</script>
+
+<style>
+	.consent {
+		position: fixed;
+		inset-inline: 0;
+		bottom: 0;
+		z-index: 50;
+		padding: 0.75rem;
+		pointer-events: none;
+	}
+	.consent[hidden] {
+		display: none;
+	}
+	.consent__inner {
+		pointer-events: auto;
+		max-width: 46rem;
+		margin-inline: auto;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-xl);
+		box-shadow: var(--shadow-card-hover, 0 8px 30px rgb(0 0 0 / 0.12));
+		padding: 1rem 1.25rem;
+		display: grid;
+		gap: 0.75rem;
+	}
+	.consent__title {
+		font-size: 1rem;
+		font-weight: 700;
+	}
+	.consent__text {
+		font-size: var(--font-size-sm);
+		line-height: 1.8;
+		color: var(--color-text-secondary);
+	}
+	.consent__actions {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 0.75rem;
+	}
+	/* 2つの選択肢を同じ見た目・同じ大きさにする */
+	.consent__btn {
+		min-height: 2.75rem;
+		width: 100%;
+	}
+	.consent__state:empty {
+		display: none;
+	}
+</style>

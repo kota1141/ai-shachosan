@@ -45,9 +45,8 @@
 		"INQUIRY_LIMIT_GLOBAL_HOUR": "30",
 		"INQUIRY_LIMIT_GLOBAL_DAY": "100",
 	},
-	// 通知メール（Cloudflare Email Routing）。Email Routingを有効にし、
-	// 宛先を確認済みにしてから、次の行のコメントを外してデプロイする。
-	// "send_email": [{ "name": "INQUIRY_MAIL", "destination_address": "taiwa.kawamura@gmail.com" }],
+	// 通知メール（Cloudflare Email Routing）。宛先はこの1件に固定（2026-11-22 宛先を確認済み）
+	"send_email": [{ "name": "INQUIRY_MAIL", "destination_address": "taiwa.kawamura@gmail.com" }],
 	// General maintenance cron trigger
 	"triggers": {
 		"crons": ["* * * * *"],

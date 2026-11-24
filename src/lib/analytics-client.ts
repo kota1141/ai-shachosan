@@ -5,11 +5,12 @@
 // - page_view は自動計測を止め（send_page_view:false）、表示ごとに1回だけ手動で送る。
 // - page_location は「既知のorigin＋path」だけ。クエリ・フラグメントは送らない。
 // - 参照元：外部はoriginまで、サイト内は既知の形のパスだけ。
-// - UTMは許可リストにある値だけを campaign_* に対応させる。
+// - UTMは campaign_* に対応させる。source/medium は許可リストの値だけ、
+//   campaign/content/term は決まった形（英小文字・数字・_ -、50文字以内）の値だけ採用する。
 // - イベントとパラメータは許可リストで絞る。氏名・メール・本文などは扱わない。
 
 import { FORM_ID, PAGE_TYPES, SLUG_PATTERN, isInquiryType, isPlacement } from "../config/inquiry";
-import { UTM_ALLOWLIST, type UtmAllowlist } from "../config/utm";
+import { UTM_ALLOWLIST, UTM_CODE_PATTERN, type UtmAllowlist } from "../config/utm";
 
 export interface AnalyticsConfig {
 	measurementId: string;
@@ -110,14 +111,16 @@ export function safeReferrer(referrer: string, here: Location = location): strin
 export function campaignFromSearch(search: string, allow: UtmAllowlist = UTM_ALLOWLIST): Params {
 	const q = new URLSearchParams(search);
 	const out: Params = {};
-	const pick = (name: string, list: readonly string[], key: string) => {
+	const pick = (name: string, key: string, list?: readonly string[]) => {
 		const v = (q.get(name) ?? "").trim().toLowerCase();
-		if (v && list.includes(v)) out[key] = v;
+		if (!v) return;
+		if (list ? list.includes(v) : UTM_CODE_PATTERN.test(v)) out[key] = v;
 	};
-	pick("utm_source", allow.sources, "campaign_source");
-	pick("utm_medium", allow.mediums, "campaign_medium");
-	pick("utm_campaign", allow.campaigns, "campaign_name");
-	pick("utm_content", allow.contents, "campaign_content");
+	pick("utm_source", "campaign_source", allow.sources);
+	pick("utm_medium", "campaign_medium", allow.mediums);
+	pick("utm_campaign", "campaign_name");
+	pick("utm_content", "campaign_content");
+	pick("utm_term", "campaign_term");
 	return out;
 }
 

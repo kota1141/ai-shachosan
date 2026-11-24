@@ -80,22 +80,21 @@
 | --- | --- |
 | `utm_source` | `x` / `threads` / `instagram` / `note` / `substack`（表記を変えない） |
 | `utm_medium` | SNS投稿は `social`、noteなどの記事からの紹介は `referral`、定期メールは `email` |
-| `utm_campaign` | 企画単位。例：`launch_202611` |
-| `utm_content` | 投稿単位。例：`checklist_post_01` |
+| `utm_campaign` | 企画・告知する記事の単位。例：`launch_202611` |
+| `utm_content` | 投稿の単位。例：`checklist_post_01`、`20261125-a` |
 
 例：
 `https://ai-shachosan.com/posts/first-checklist?utm_source=x&utm_medium=social&utm_campaign=launch_202611&utm_content=checklist_post_01`
 
-- 英小文字・数字・アンダースコアだけを使う。氏名・メール・薬局名・読者のIDは入れない。
+- 英小文字・数字・`_`・`-` だけ、50文字以内。氏名・メール・薬局名・読者のIDは入れない。
 - サイト内のリンクには付けない。
 
-### 新しい企画・投稿コードを追加する
+### 登録が必要なもの・不要なもの
 
-1. GitHubで `src/config/utm.ts` を開き、鉛筆アイコンで編集。
-2. `campaigns` か `contents` の配列に `"新しいコード",` を1行追加して保存（コミット）→ マージ。
-3. デプロイ後に、そのコードを付けたリンクを投稿する。
+- `utm_campaign` / `utm_content` / `utm_term`：**登録不要**。上の形に合っていれば、そのまま投稿してよい。
+- `utm_source` / `utm_medium`：`src/config/utm.ts` の許可リストにある値だけ採用する。新しい媒体（例：`line`）を使うときは、GitHubで `src/config/utm.ts` を開き、`sources` か `mediums` に `"新しい値",` を1行追加 → マージ → デプロイ後に投稿する。
 
-登録していない値は、そのパラメータだけ採用されません（他の登録済みの値と、通常の参照元の判定は残ります）。
+形に合わない値・許可リストにない値は、そのパラメータだけ採用されません（他の値と、通常の参照元の判定は残ります）。
 
 ## 6. GA4で見るレポートと探索の作り方
 
